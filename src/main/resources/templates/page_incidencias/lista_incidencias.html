@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8" />
+    <title th:text="#{issues.list.title_page}">Gestión de Incidencias - Restaurantus</title>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
+    <link rel="icon" href="/images/favicon.png" />
+
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+    <style>
+        .col-fit {
+            width: 1%;
+            white-space: nowrap;
+        }
+
+        th.no-sort {
+            padding-right: 8px !important;
+            cursor: default !important;
+            pointer-events: none;
+        }
+
+        th.no-sort::before,
+        th.no-sort::after {
+            display: none !important;
+            content: "" !important;
+        }
+
+        .badge-status {
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .status-alta {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .status-media {
+            background: #ffedd5;
+            color: #c2410c;
+            border: 1px solid #fed7aa;
+        }
+
+        .status-baja {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+
+        .estado-abierta {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+        .estado-proceso {
+            background: #f3e8ff;
+            color: #7e22ce;
+        }
+
+        .estado-resuelta {
+            background: #f1f5f9;
+            color: #64748b;
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        .btn-icon:hover {
+            transform: scale(1.1);
+        }
+
+        .bg-edit {
+            background: #e0f2fe;
+            color: #0284c7;
+        }
+
+        .bg-del {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .bg-check {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .bg-process {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .card-incidencia {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .btn-new-incidencia {
+            background: #ef4444;
+            color: white;
+            border-radius: 50px;
+            padding: 10px 25px;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-new-incidencia:hover {
+            transform: translateY(-2px);
+            background: #dc2626;
+            color: white;
+        }
+
+        .filter-btn {
+            border: 1px solid #e2e8f0;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: #64748b;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .filter-btn.active, .filter-btn:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+            border-color: #cbd5e1;
+        }
+
+        @keyframes highlightRow {
+            0% {
+                background-color: #dcfce7;
+            }
+            100% {
+                background-color: transparent;
+            }
+        }
+
+        @keyframes flashUpdate {
+            0% {
+                background-color: #fff7ed;
+            }
+            100% {
+                background-color: transparent;
+            }
+        }
+
+        .new-row {
+            animation: highlightRow 2s ease-out;
+        }
+
+        .updated-row {
+            animation: flashUpdate 1.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{/page_dashboard/dashboard :: sidebar(activePage='incidencias')}"></div>
+
+    <div class="admin-container">
+        <main class="main-content with-dashboard">
+            <div class="card-incidencia">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <div>
+                        <h1 th:text="#{issues.list.title}">Gestión de Incidencias</h1>
+                        <p class="subtitle" style="margin-bottom: 0" th:text="#{issues.list.subtitle}">
+                            Registra y gestiona incidencias del restaurante
+                        </p>
+                    </div>
+                    <button onclick="abrirModalReporteGlobal()" class="btn-new-incidencia">
+                        <i class="bi bi-plus-circle"></i>
+                        <span th:text="#{issues.list.new_issue}">Nueva Incidencia</span>
+                    </button>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 25px">
+                    <button class="filter-btn active" onclick="filtrarPor('TODAS')"
+                      th:text="#{issues.list.filter_all}">Todas
+                    </button>
+                    <button class="filter-btn" onclick="filtrarPor('ABIERTA')"
+                      th:text="#{issues.list.filter_open}">Abiertas
+                    </button>
+                    <button class="filter-btn" onclick="filtrarPor('EN_PROCESO')"
+                      th:text="#{issues.list.filter_in_progress}">En Proceso
+                    </button>
+                    <button class="filter-btn" onclick="filtrarPor('RESUELTA')"
+                      th:text="#{issues.list.filter_resolved}">Resueltas</button>
+                </div>
+
+                <table class="data-table" id="tablaIncidencias">
+                    <thead>
+                        <tr>
+                            <th th:text="#{crudCommons.id}">ID</th>
+                            <th th:text="#{issues.list.th_title}">Título</th>
+                            <th th:text="#{issues.list.th_desc}">Descripción</th>
+                            <th th:text="#{issues.list.th_priority}">Prioridad</th>
+                            <th th:text="#{crudCommons.status}">Estado</th>
+                            <th th:text="#{issues.list.th_date}">Fecha</th>
+                            <th th:text="#{issues.list.th_reporter}">Reportador</th>
+                            <th th:text="#{issues.list.th_resolved}">Resuelto</th>
+                            <th class="col-fit no-sort" th:text="#{crudCommons.actions}" sec:authorize="hasAnyRole('ADMIN', 'GERENTE')">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="incidencias-tbody">
+                        <tr th:each="inc : ${incidencias}" th:id="'row-' + ${inc.id}" th:data-estado="${inc.estado}" class="data-row">
+                            <td th:text="${inc.id}">1</td>
+                            <td th:text="${inc.titulo}">Título</td>
+                            <td th:text="${inc.descripcion}">Descripción</td>
+                            <td>
+                                <span class="badge-status" th:classappend="${inc.prioridad == 'ALTA' ? 'status-alta' : (inc.prioridad == 'MEDIA' ? 'status-media' : 'status-baja')}"
+                                    th:text="${inc.prioridad == 'ALTA' ? #messages.msg('issues.priority.high')
+                                    : inc.prioridad == 'MEDIA' ? #messages.msg('issues.priority.medium')
+                                    : #messages.msg('issues.priority.low')}">
+                                    Prioridad
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge-status" th:classappend="${inc.estado == 'ABIERTA' ? 'estado-abierta' : (inc.estado == 'EN_PROCESO' ? 'estado-proceso' : 'estado-resuelta')}"
+                                    th:text="${inc.estado == 'ABIERTA' ? #messages.msg('issues.status.open')
+                                    : inc.estado == 'EN_PROCESO' ? #messages.msg('issues.status.in_progress')
+                                    : #messages.msg('issues.status.resolved')}">
+                                    Estado
+                                </span>
+                            </td>
+                            <td th:text="${inc.fechaCreacion != null ? #temporals.format(inc.fechaCreacion, 'dd/MM/yyyy HH:mm') : '---'}">
+                                Fecha
+                            </td>
+                            <td th:text="${inc.reportadoPor != null ? inc.reportadoPor : #messages.msg('issues.list.anonymous_reporter')}">
+                                Admin
+                            </td>
+                            <td th:text="${inc.resueltoPor != null ? inc.resueltoPor : '---'}">
+                                ---
+                            </td>
+                            <td class="col-fit" sec:authorize="hasAnyRole('ADMIN', 'GERENTE')">
+                                <button class="btn-icon bg-edit" th:title="#{crudCommons.edit}" th:data-id="${inc.id}" th:data-titulo="${inc.titulo}" th:data-descripcion="${inc.descripcion}" th:data-prioridad="${inc.prioridad}" onclick="abrirModalEditar(this)">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn-icon bg-process" th:title="#{issues.action.put_in_progress}" th:if="${inc.estado == 'ABIERTA'}" th:onclick="marcarEnProceso([[${inc.id}]])">
+                                    <i class="bi bi-clock-history"></i>
+                                </button>
+                                <button class="btn-icon bg-check" th:title="#{issues.action.mark_as_resolved}" th:if="${inc.estado != 'RESUELTA'}" th:onclick="marcarResuelta([[${inc.id}]])">
+                                    <i class="bi bi-check-circle"></i>
+                                </button>
+                                <button class="btn-icon bg-del" th:title="#{crudCommons.delete}" th:onclick="eliminarIncidencia([[${inc.id}]])">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal fade" id="modalEditarIncidencia" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-rounded shadow-lg border-0">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-primary">
+                        <i class="bi bi-pencil-square"></i>
+                        <span th:text="#{issues.edit.title}">Editar Incidencia</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="formEditarIncidencia" onsubmit="guardarEdicion(event)">
+                    <input type="hidden" name="id" id="edit-id" />
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold" th:text="#{issue.create.set_title}">TÍTULO</label>
+                            <input type="text" class="form-control bg-light" name="titulo" id="edit-titulo" th:placeholder="#{issue.create.titel_placeholder}" required/>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold" th:text="#{issue.create.set_desc}">DESCRIPCIÓN</label>
+                            <textarea class="form-control bg-light" name="descripcion" id="edit-desc" rows="3" th:placeholder="#{issue.create.desc_placeholder}" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold" th:text="#{issue.create.set_priority}">PRIORIDAD</label>
+                            <select class="form-select" name="prioridad" id="edit-prioridad">
+                                <option value="BAJA" th:text="#{issue.create.priority_low}">Baja</option>
+                                <option value="MEDIA" th:text="#{issue.create.priority_medium}">Media</option>
+                                <option value="ALTA" th:text="#{issue.create.priority_high}">Alta 🚨</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal" th:text="#{issue.create.cancel}">
+                            Cancelar
+                        </button>
+                        <button th:text="#{issue.edit.save_changes}" type="submit" class="btn btn-primary px-4" style="border-radius: 50px">
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        window.datatableTranslations = {
+            search: "",
+            searchPlaceholder: /*[[#{crudCommons.search}]]*/ "Buscar",
+            lengthMenu: /*[[#{crudCommons.lengthMenu}]]*/ "Mostrar _MENU_ registros",
+            infoFiltered: "",
+            info: /*[[#{crudCommons.info}]]*/ "Mostrando _START_ a _END_ de <b>_TOTAL_</b> registros",
+            infoEmpty: /*[[#{crudCommons.infoEmpty}]]*/ "Mostrando 0 a 0 de 0 registros",
+            paginate: {
+                next: /*[[#{crudCommons.next}]]*/ "Siguiente",
+                previous: /*[[#{crudCommons.previous}]]*/ "Anterior",
+                first: /*[[#{crudCommons.first}]]*/ "Primero",
+                last: /*[[#{crudCommons.last}]]*/ "Último"
+            }
+        };
+
+        let stompClient = null;
+        let dataTableInstance = null;
+
+        function connectWebSocket() {
+            const socket = new SockJS("/ws-restaurantus");
+            stompClient = Stomp.over(socket);
+            stompClient.debug = null;
+            stompClient.connect(
+                {},
+                function (frame) {
+                    console.log("🟢 WS Conectado");
+                    stompClient.subscribe("/topic/incidencias", function (message) {
+                      const msg = JSON.parse(message.body);
+                      procesarMensajeWS(msg);
+                    });
+                },
+                function (err) {
+                    setTimeout(connectWebSocket, 5000);
+                },
+            );
+        }
+
+        function procesarMensajeWS(msg) {
+            if (msg.accion === "ELIMINAR") {
+                const row = document.getElementById("row-" + msg.datos);
+                if (row) {
+                    row.remove();
+                    if (dataTableInstance) {
+                        dataTableInstance.row(row).remove().draw();
+                    }
+                }
+            } else if (msg.accion === "NUEVA" || msg.accion === "EDITAR") {
+                procesarIncidenciaWS(msg.datos);
+            }
+        }
+
+        function procesarIncidenciaWS(inc) {
+            const rowId = "row-" + inc.id;
+            const existingRow = document.getElementById(rowId);
+
+            if (existingRow) {
+                actualizarFilaDOM(existingRow, inc);
+                existingRow.style.transition = "background-color 0.5s";
+                existingRow.style.backgroundColor = "#fffbeb";
+                setTimeout(() => (existingRow.style.backgroundColor = ""), 1000);
+
+                if (dataTableInstance) {
+                    dataTableInstance.row(existingRow).invalidate().draw(false);
+                }
+            } else {
+                const newRow = agregarFilaDOM(inc);
+                if (dataTableInstance) {
+                    dataTableInstance.row.add(newRow).draw(false);
+                }
+            }
+        }
+
+        function actualizarFilaDOM(row, inc) {
+            row.dataset.estado = inc.estado;
+            row.cells[1].innerText = inc.titulo;
+            row.cells[2].innerText = inc.descripcion;
+
+            let colorPrio =
+                inc.prioridad === "ALTA"
+                    ? "status-alta"
+                    : inc.prioridad === "MEDIA"
+                        ? "status-media"
+                        : "status-baja";
+            row.cells[3].innerHTML = `<span class="badge-status ${colorPrio}">${inc.prioridad}</span>`;
+
+            let colorEstado = "estado-abierta";
+            if (inc.estado === "EN_PROCESO") colorEstado = "estado-proceso";
+            if (inc.estado === "RESUELTA") colorEstado = "estado-resuelta";
+            row.cells[4].innerHTML = `<span class="badge-status ${colorEstado}">${inc.estado}</span>`;
+
+            const resuelto = inc.resueltoPor
+                ? typeof inc.resueltoPor === "object"
+                    ? inc.resueltoPor.username
+                    : inc.resueltoPor
+                : "---";
+            row.cells[7].innerText = resuelto;
+            row.cells[8].innerHTML = generarBotonesHTML(inc);
+        }
+
+        function agregarFilaDOM(inc) {
+            const tbody = document.getElementById("incidencias-tbody");
+            const row = document.createElement("tr");
+            row.id = "row-" + inc.id;
+            row.className = "new-row data-row";
+            row.dataset.estado = inc.estado;
+
+            // --- MANEJO DE FECHA ROBUSTO ---
+            let fechaTexto = "---";
+            if (inc.fechaCreacion) {
+                // El servidor ahora envía string ISO (ej: "2023-10-27T10:00:00")
+                const fechaObj = new Date(inc.fechaCreacion);
+                if (!isNaN(fechaObj)) {
+                    fechaTexto = fechaObj.toLocaleString("es-ES", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                  });
+                }
+            }
+
+            // --- MANEJO DE USUARIO ---
+            // Como ahora el Controller envía el dato explícitamente, esto funcionará
+            const reportado = inc.reportadoPor
+                ? typeof inc.reportadoPor === "object"
+                    ? inc.reportadoPor.username
+                    : inc.reportadoPor
+                : "Anónimo";
+            const resuelto = inc.resueltoPor
+                ? typeof inc.resueltoPor === "object"
+                    ? inc.resueltoPor.username
+                    : inc.resueltoPor
+                : "---";
+
+            let colorPrio =
+                inc.prioridad === "ALTA"
+                    ? "status-alta"
+                    : inc.prioridad === "MEDIA"
+                        ? "status-media"
+                        : "status-baja";
+            let colorEstado =
+                inc.estado === "EN_PROCESO"
+                    ? "estado-proceso"
+                    : inc.estado === "RESUELTA"
+                        ? "estado-resuelta"
+                        : "estado-abierta";
+
+            row.innerHTML = `
+                <td>${inc.id}</td>
+                <td>${inc.titulo}</td>
+                <td>${inc.descripcion}</td>
+                <td><span class="badge-status ${colorPrio}">${inc.prioridad}</span></td>
+                <td><span class="badge-status ${colorEstado}">${inc.estado}</span></td>
+                <td>${fechaTexto}</td> 
+                <td>${reportado}</td>
+                <td>${resuelto}</td>
+                <td class="col-fit">${generarBotonesHTML(inc)}</td>
+            `;
+
+            tbody.prepend(row);
+            return row;
+        }
+
+        function generarBotonesHTML(inc) {
+            let html = `
+                <button class="btn-icon bg-edit" title="Editar"
+                        data-id="${inc.id}" data-titulo="${inc.titulo}" data-descripcion="${inc.descripcion}" data-prioridad="${inc.prioridad}"
+                        onclick="abrirModalEditar(this)"><i class="bi bi-pencil"></i></button>`;
+            if (inc.estado === "ABIERTA")
+                html += `<button onclick="marcarEnProceso(${inc.id})" class="btn-icon bg-process" title="Poner En Proceso"><i class="bi bi-clock-history"></i></button>`;
+            if (inc.estado !== "RESUELTA")
+                html += `<button onclick="marcarResuelta(${inc.id})" class="btn-icon bg-check" title="Marcar como resuelta"><i class="bi bi-check-circle"></i></button>`;
+            html += `<button onclick="eliminarIncidencia(${inc.id})" class="btn-icon bg-del" title="Eliminar"><i class="bi bi-trash"></i></button>`;
+            return html;
+        }
+
+        // --- FILTRO PERSONALIZADO PARA DATATABLES ---
+        $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+            if (settings.nTable.id !== "tablaIncidencias") return true;
+
+            const row = $("#tablaIncidencias").DataTable().row(dataIndex).node();
+            const estado = $(row).data("estado");
+
+            if (window.currentFilter === "TODAS") return true;
+            return estado === window.currentFilter;
+        });
+
+        function filtrarPor(estado) {
+            window.currentFilter = estado;
+
+            document
+                .querySelectorAll(".filter-btn")
+                .forEach((btn) => btn.classList.remove("active"));
+            event.target.classList.add("active");
+
+            if (dataTableInstance) {
+                dataTableInstance.draw();
+            }
+        }
+
+        // --- ACCIONES Y API ---
+        function marcarEnProceso(id) {
+            if (confirm(/*[[#{issues.action.ask_in_progress}]]*/ "¿Marcar EN PROCESO?"))
+                apiCall(`/incidencias/en-proceso/${id}`, "POST");
+        }
+
+        function marcarResuelta(id) {
+            if (confirm(/*[[#{issues.action.ask_resolved}]]*/ "¿Marcar RESUELTA?"))
+                apiCall(`/incidencias/resolver/${id}`, "POST");
+        }
+
+        function eliminarIncidencia(id) {
+            if (confirm(/*[[#{carta.ver.ask_delete}]]*/ "¿Eliminar?")) {
+                apiCall(`/incidencias/eliminar/${id}`, "DELETE");
+                const row = document.getElementById("row-" + id);
+                if (row && dataTableInstance) {
+                    dataTableInstance.row(row).remove().draw();
+                }
+            }
+        }
+
+        function abrirModalEditar(btn) {
+            document.getElementById("edit-id").value = btn.getAttribute("data-id");
+            document.getElementById("edit-titulo").value =
+                btn.getAttribute("data-titulo");
+            document.getElementById("edit-desc").value =
+                btn.getAttribute("data-descripcion");
+            document.getElementById("edit-prioridad").value =
+                btn.getAttribute("data-prioridad");
+            new bootstrap.Modal(
+                document.getElementById("modalEditarIncidencia"),
+            ).show();
+        }
+
+        function guardarEdicion(event) {
+            event.preventDefault();
+            const formData = new FormData(
+                document.getElementById("formEditarIncidencia"),
+            );
+            apiCall("/incidencias/api/guardar-v3", "POST", formData);
+            bootstrap.Modal.getInstance(
+                document.getElementById("modalEditarIncidencia"),
+            ).hide();
+        }
+
+        function apiCall(url, method, body = null) {
+            const token = document.querySelector('meta[name="_csrf"]').content;
+            const header = document.querySelector(
+                'meta[name="_csrf_header"]',
+            ).content;
+            const options = { method: method, headers: { [header]: token } };
+            if (body) options.body = body;
+            fetch(url, options).then((r) => {
+                if (!r.ok) alert("Error");
+            });
+        }
+
+        function abrirModalReporteGlobal() {
+            var modalElement = document.getElementById("globalModalReporte");
+            if (modalElement) new bootstrap.Modal(modalElement).show();
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            window.currentFilter = "TODAS";
+
+            // Inicializar DataTable (se hace automáticamente por el script global)
+            // Guardar referencia a la instancia
+            setTimeout(() => {
+                dataTableInstance = $("#tablaIncidencias").DataTable();
+            }, 100);
+
+            connectWebSocket();
+        });
+      </script>
+  </body>
+</html>

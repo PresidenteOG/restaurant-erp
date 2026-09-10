@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="#{error.404.title_page}">404 - Página No Encontrada | Restaurantus</title>
+    <link rel="icon" type="image/png" th:href="@{/images/favicon.png}">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <style>
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .main-content.with-dashboard {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ebf4ff; /* Fondo azul suave */
+            padding: 20px;
+        }
+
+        .error-content-simple {  
+            max-width: 500px;
+            text-align: center;
+            background: transparent;
+        }
+
+        /* Estilo para la imagen del error */
+        .error-image {
+            width: 100%;
+            max-width: 350px; /* Ajusta el tamaño de tu imagen aquí */
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        .info-box-simple {
+            display: inline-block;
+            padding: 10px 20px;
+            color: #2b6cb0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .btn-custom {
+            border-radius: 8px;
+            font-weight: 600;
+            padding: 10px 25px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-container">
+        <main class="main-content with-dashboard">
+            
+            <div class="error-content-simple">
+                <img th:src="@{/images/error/404.png}" alt="Error 404" title="Error 404" class="error-image">
+                
+                <h2 class="fw-bold text-dark" th:text="#{error.404.title}">Página no encontrada</h2>
+
+                <div class="info-box-simple" th:text="#{error.404.info_box}">
+                    ¡Vaya! Este plato no está en el menú.
+                </div>
+
+                <p class="text-muted mb-4" th:text="#{error.404.message}">
+                    Lo sentimos, la página que buscas no existe o ha sido movida a otra sección.
+                </p>
+
+                <div class="d-flex gap-3 justify-content-center">
+                    <a th:href="@{/home}" class="btn btn-primary btn-custom shadow-sm">
+                        <i class="bi bi-house-door me-2"></i>
+                        <span th:text="#{error.404.btn_home}">Ir al Inicio</span>
+                    </a>
+
+                    <a href="javascript:history.back()" class="btn btn-outline-secondary btn-custom bg-white">
+                        <i class="bi bi-arrow-left me-2"></i>
+                        <span th:text="#{error.404.btn_back}">Volver</span>
+                    </a>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

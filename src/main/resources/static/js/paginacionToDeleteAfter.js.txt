@@ -1,0 +1,97 @@
+function inicializarTablaCompleta(idTabla) {
+    $.fn.dataTable.ext.errMode = 'none';
+    // 1. Crear los inputs de búsqueda en el footer
+    $('#' + idTabla + ' tfoot th').each(function () {
+        var title = $(this).text();
+        if (title.trim() !== "") {
+            $(this).html('<input type="text" placeholder="Buscar ' + title + '" style="width:100%; border: 1px solid #10b981; padding: 4px; border-radius: 4px; font-weight: normal;" />');
+        }
+    });
+
+    // Detectar columnas sin texto (como "Acciones")
+    var columnasSinTexto = [];
+    $('#' + idTabla + ' thead tr:last-child th').each(function (index) {
+        if ($(this).text().trim() === "") {
+            columnasSinTexto.push(index);
+        }
+    });
+
+    // 2. Inicializar DataTables
+    var table = $('#' + idTabla).DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json",
+            "search": "",
+            "searchPlaceholder": "Buscar",
+            "lengthMenu": "Mostrar _MENU_ registros",
+            "infoFiltered": "",
+            "info": "Mostrando _START_ a _END_ de <b>_TOTAL_</b> registros",
+            "infoEmpty": "Mostrando 0 a 0 de 0 registros",
+            "paginate": {
+                "next": "Siguiente",
+                "previous": "Anterior",
+                "first": "Primero",
+                "last": "Último"
+            }
+        },
+        "columnDefs": [
+            { "orderable": false, "targets": columnasSinTexto }
+        ],
+        "order": [[0, 'asc']], // Ordenar por nombre de ingrediente por defecto
+        "pageLength": 20,
+        "lengthMenu": [[10, 20, 50, -1], [10, 20, 50, "Todos"]],
+        "orderCellsTop": true,
+        "dom": '<"d-flex justify-content-between mb-2"lf>rt<"d-flex justify-content-between mt-2"ip>',
+        "initComplete": function () {
+            // 3. Lógica de filtrado para los cuadros del footer
+            this.api().columns().every(function () {
+                var that = this;
+                $('input', this.footer()).on('keyup change clear', function () {
+                    if (that.search() !== this.value) {
+                        that.search(this.value).draw();
+                    }
+                });
+            });
+        }
+    });
+
+    return table;
+}
+
+function inicializarTablaSimple(idTabla) {
+    $.fn.dataTable.ext.errMode = 'none';
+    // 1. Detectar columnas que no deben ser ordenables (como las de "Acciones")
+    var columnasSinOrden = [];
+    $('#' + idTabla + ' thead tr:last-child th').each(function (index) {
+        if ($(this).text().trim() === "" || $(this).hasClass('text-center')) {
+            columnasSinOrden.push(index);
+        }
+    });
+
+    // 2. Inicializar DataTables sin buscadores
+    var table = $('#' + idTabla).DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json",
+            "infoFiltered": "",
+            "info": "Mostrando _START_ a _END_ de <b>_TOTAL_</b> registros",
+            "infoEmpty": "Mostrando 0 a 0 de 0 registros",
+            "paginate": {
+                "first": "Primero",
+                "last": "Último",
+                "next": "Siguiente",
+                "previous": "Anterior"
+            }
+        },
+        "columnDefs": [
+            { "orderable": false, "targets": columnasSinOrden }
+        ],
+        "order": [[0, 'asc']], 
+        "pageLength": 20,
+        "lengthMenu": [[10, 20, 50, -1], [10, 20, 50, "Todos"]],
+        "searching": false,    // Desactiva el motor de búsqueda por completo
+        "orderCellsTop": true,
+        // Eliminamos la 'f' del dom para que no reserve espacio para el buscador
+        "dom": '<"d-flex justify-content-between mb-2"l>rt<"d-flex justify-content-between mt-2"ip>'
+    });
+
+    return table;
+}

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{inventory.lot_form.title_page}">Lote - Restaurantus</title>
+    <link rel="icon" href="/images/favicon.png">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="admin-container">
+        <main class="main-content" style="max-width: 600px; margin: 0 auto;">
+            <div class="panel-header">
+                <h1 th:text="#{inventory.lot_form.title}">Agregar Lote</h1>
+                <a th:href="@{/almacen/stock}" class="edit-link" th:text="'← ' + #{inventory.lot_form.back}">← Volver al solicitudes de almacén</a>
+                <br><br>
+            </div>
+            <form th:action="@{/almacen/stock/completar}" th:object="${lote}" method="post" class="side-panel" style="display: block; width: 100%;">
+                <input type="hidden" th:field="*{id}">
+                <input type="hidden" th:field="*{solicitudStock}">
+                <input type="hidden" th:field="*{ingrediente}">
+
+                <div class="detail-group">
+                    <label class="detail-label" th:text="#{inventory.lot_form.label_qty}">Cantidad del lote</label>
+                    <input type="number" th:field="*{cantidadInicial}" class="detail-value"
+                           style="width:100%; border:1px solid #334155; background:transparent; padding:8px; border-radius:4px;" 
+                           required>
+                </div>
+
+                <div class="detail-group">
+                    <label class="detail-label" th:text="#{inventory.lot_form.label_expiry}">Fecha de caducidad</label>
+                    <input type="date" th:field="*{fechaCaducidad}" class="detail-value" 
+                           style="width:100%; border:1px solid #334155; background:transparent; padding:8px; border-radius:4px;" 
+                           required>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <button type="submit" class="btn-action btn-primary" th:text="#{inventory.lot_form.btn_save}">Rellenar Stock</button>
+                </div>
+            </form>
+        </main>
+    </div>
+</body>
+</html>

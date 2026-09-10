@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{inventory.consumptions.title_page}">Historial de Consumos - Restaurantus</title>
+    <link rel="stylesheet" href="/css/user_and_roles_lists.css">
+    <link rel="icon" href="/images/favicon.png">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+
+<body>
+    <div th:replace="~{/page_dashboard/dashboard :: sidebar(activePage='inventory')}"></div>
+
+    <div class="admin-container">
+        <main class="main-content with-dashboard">
+            <div class="panel-header" style="margin-bottom: 20px; border: none; box-shadow: none;">
+                <h1 th:text="#{inventory.consumptions.title}">Historial de Consumos</h1>
+                <p th:text="#{inventory.consumptions.subtitle}">Registro detallado de ingredientes utilizados en la preparación de platos.</p>
+
+                <div class="" style="margin-top: 25px;">
+                    <a th:href="@{/almacen/inventario}" class="btn-action btn-primary" style="text-decoration:none; display: inline-block; width: auto; padding: 10px 20px;"
+                    th:text="'← ' + #{inventory.form.back}">← Volver al almacen</a>
+                </div>
+            </div>
+
+            <div
+                style="background-color: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                <table id="tablaConsumos" class="data-table">
+                    <thead>
+                        <tr>
+                            <th th:text="#{logs.th_date}">Fecha y Hora</th>
+                            <th th:text="#{inventory.list.th_name}">Ingrediente</th>
+                            <th th:text="#{inventory.consumptions.th_quantity}">Cantidad</th>
+                            <th th:text="#{inventory.consumptions.th_unit}">Unidad</th>
+                            <th th:text="#{inventory.consumptions.th_dish}">Plato Destino</th>
+                            <th th:text="#{inventory.consumptions.th_cost}">Costo Est.</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th><input type="text" th:placeholder="#{inventory.consumptions.th_date} + '...'"></th>
+                            <th><input type="text" th:placeholder="#{inventory.list.th_name} + '...'"></th>
+                            <th><input type="text" th:placeholder="#{inventory.consumptions.th_quantity} + '...'"></th>
+                            <th>
+                                <select class="select-filter">
+                                    <option value="" th:text="#{crudCommons.all}">Todos</option>
+                                    <option th:value="#{inventory.list.unit_l}" th:text="#{inventory.list.unit_l}">Litros (L)</option>
+                                    <option th:value="#{inventory.list.unit_kg}" th:text="#{inventory.list.unit_kg}">Kilogramos (KG)</option>
+                                    <option th:value="#{inventory.list.unit_g}" th:text="#{inventory.list.unit_g}">Gramos (G)</option>
+                                    <option th:value="#{inventory.list.unit_units}" th:text="#{inventory.list.unit_units}">Unidades</option>
+                                </select>
+                            </th>
+                            <th><input type="text" th:placeholder="#{inventory.consumptions.th_dish} + '...'"></th>
+                            <th><input type="text" th:placeholder="#{inventory.consumptions.th_cost} + '...'"></th>
+                    </thead>
+                    <tbody>
+                        <tr th:each="con : ${consumos}">
+                            <td th:text="${#temporals.format(con.fechaConsumo, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td style="font-weight: 600; color: #064e3b;">
+                                <span th:text="${con.ingrediente.nombre}"></span>
+                            </td>
+                            <td th:text="${con.cantidad}"></td>
+                            <td>
+                                <span class="status-pill bg-blue" th:text="${con.unidad == 'L' ? #messages.msg('inventory.list.unit_l')
+                                : con.unidad == 'KG' ? #messages.msg('inventory.list.unit_kg')
+                                : con.unidad == 'G' ? #messages.msg('inventory.list.unit_g')
+                                : #messages.msg('inventory.list.unit_units')}"></span>
+                            </td>
+                            <td>
+                                <div th:if="${con.plato}">
+                                    <span th:text="${con.plato.nombre}" style="font-style: italic;"></span>
+                                </div>
+                                <div th:if="!${con.plato}">
+                                    <span tstyle="font-style: italic;" th:text="#{inventory.consumptions.expired}">Caducado</span>
+                                </div>
+                            </td>
+                            <td th:text="${#numbers.formatDecimal(con.costoPlato, 1, 2) + '€'}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+        window.datatableTranslations = {
+            search: "",
+            searchPlaceholder: /*[[#{crudCommons.search}]]*/ "Buscar",
+            lengthMenu: /*[[#{crudCommons.lengthMenu}]]*/ "Mostrar _MENU_ registros",
+            infoFiltered: "",
+            info: /*[[#{crudCommons.info}]]*/ "Mostrando _START_ a _END_ de <b>_TOTAL_</b> registros",
+            infoEmpty: /*[[#{crudCommons.infoEmpty}]]*/ "Mostrando 0 a 0 de 0 registros",
+            paginate: {
+                next: /*[[#{crudCommons.next}]]*/ "Siguiente",
+                previous: /*[[#{crudCommons.previous}]]*/ "Anterior",
+                first: /*[[#{crudCommons.first}]]*/ "Primero",
+                last: /*[[#{crudCommons.last}]]*/ "Último"
+            }
+        };
+    </script>
+</body>
+
+</html>

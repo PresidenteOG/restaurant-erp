@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{userDelete.title_page}">Eliminar Usuario - Restaurantus</title>
+    <link rel="stylesheet" href="/css/userModify.css">
+    <link rel="icon" href="/images/favicon.png">
+</head>
+<body class="centered-layout">
+    <main class="main-content">
+        <div class="form-card alert-card animate-fade-in" style="max-width: 500px; border-top-color: #ef4444;">
+            <div class="status-icon-danger" style="font-size: 3.5rem; margin-bottom: 1rem; text-align: center;">🗑️</div>
+            
+            <h2 th:text="#{userDelete.h2}" style="text-align: center; color: #1e293b;">¿Eliminar permanentemente este usuario?</h2>
+            
+            <div class="user-details-box" style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin: 1.5rem 0; border: 1px solid #e2e8f0;">
+                <p style="margin-bottom: 0.5rem;">
+                    <strong th:text="#{userDelete.label_username}">Usuario:</strong> 
+                    <span th:text="${user.username}" style="color: #475569;"></span>
+                </p>
+                <p>
+                    <strong th:text="#{userDelete.label_email}">Email:</strong> 
+                    <span th:text="${user.email}" style="color: #475569;"></span>
+                </p>
+            </div>
+
+            <div class="warning-box" style="background-color: #fef2f2; padding: 1rem; border-radius: 8px; border-left: 4px solid #ef4444; margin-bottom: 2rem;">
+                <p th:text="#{userDelete.warning_text}" style="color: #991b1b; font-size: 0.9rem; font-weight: 600;">
+                    Atención: Esta acción es definitiva. Se eliminarán todos los registros asociados y no se podrá recuperar la información.
+                </p>
+            </div>
+
+            <div class="form-actions" style="justify-content: center; gap: 1rem;">
+                <a th:href="@{'/users/deleteUserOk-' + ${user.id}}" class="btn-action" 
+                   style="background-color: #ef4444; color: white; text-decoration: none;" th:text="#{userDelete.btn_confirm}">
+                    Eliminar permanentemente
+                </a>
+                <a th:href="@{/users/}" class="btn-action btn-outline" th:text="#{userDelete.btn_cancel}">
+                    Cancelar
+                </a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

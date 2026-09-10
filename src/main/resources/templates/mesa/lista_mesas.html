@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8" />
+    <title th:text="#{mesa.list.title_page}">Gestión de Mesas - Restaurantus</title>
+    <link rel="stylesheet" href="/css/user_and_roles_lists.css">
+    <link rel="icon" href="/images/favicon.png">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <style>
+
+        .badge-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+        .status-disponible { background: #dcfce7; color: #16a34a; }
+        .status-ocupada { background: #fee2e2; color: #dc2626; }
+    </style>
+</head>
+
+<body>
+    <div th:replace="~{/page_dashboard/dashboard :: sidebar(activePage='tables')}"></div>
+
+    <div class="admin-container">
+        <main class="main-content with-dashboard">
+            <div class="panel-header" style="background: white; border-radius: 20px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <div>
+                    <h1 style="color: #064e3b; margin: 0;" th:text="#{mesa.list.h1}">Gestión de Mesas</h1>
+                    <p style="color: #64748b; margin: 5px 0 0 0;" th:text="#{mesa.list.subtitle}">Consulta y gestiona las mesas físicas del establecimiento.</p>
+                </div>
+                <a th:href="@{/mesas/nueva}" class="btn-action btn-primary" style="text-decoration: none; display: flex; align-items: center; gap: 8px; width: auto; padding: 12px 24px;"
+                sec:authorize="hasAnyRole('GESTOR_CLIENTES', 'ADMIN', 'GERENTE')">
+                    <span th:text="'+ ' + #{mesa.list.btn_new}">+ NUEVA MESA</span>
+                </a>
+            </div>
+
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <span th:text="${success}"></span> 
+            </div>
+
+
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <span th:text="${error}"></span> 
+            </div>
+
+            <div class="card" style="border-radius: 20px; border: none; background: white; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                <table id="tablaMesas" class="data-table">
+                    <thead>
+                        <tr>
+                            <th th:text="#{crudCommons.id}">ID</th>
+                            <th th:text="#{mesa.list.th_table_num}">Nº Mesa</th>
+                            <th th:text="#{mesa.list.th_capacity}">Capacidad</th>
+                            <th th:text="#{mesa.list.th_location}">Ubicación</th>
+                            <th th:text="#{crudCommons.status}">Estado</th>
+                            <th th:text="#{crudCommons.actions}" class="text-center no-sort"
+                            sec:authorize="hasAnyRole('GESTOR_CLIENTES', 'ADMIN', 'GERENTE')">Acciones</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th><input type="text" th:placeholder="#{crudCommons.id} + '...'"/></th>
+                            <th><input type="text" th:placeholder="#{mesa.list.th_table_num} + '...'"/></th>
+                            <th><input type="text" th:placeholder="#{mesa.list.th_capacity} + '...'"/></th>
+                            <th>
+                                <select class="select-filter">
+                                    <option value="" th:text="#{mesa.list.filter_all}">Todas las Ubicaciones</option>
+                                    <option th:each="loc : ${ubicaciones}" th:value="${loc}" th:text="${loc}"></option>
+                                </select>
+                            </th>
+                            <th>
+                                <select class="select-filter">
+                                    <option value="" th:text="#{crudCommons.all}">Todos</option>
+                                    <option th:value="#{mesa.status.available}" th:text="#{mesa.status.available}">Sí Disponible</option>
+                                    <option th:value="#{mesa.status.unavailable}" th:text="#{mesa.status.unavailable}">No Disponible</option>
+                                    <option th:value="#{mesa.status.out_of_service}" th:text="#{mesa.status.out_of_service}">Fuera de Servicio</option>
+                                </select>
+                            </th>
+                            <th sec:authorize="hasAnyRole('GESTOR_CLIENTES', 'ADMIN', 'GERENTE')"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="mesa : ${mesas}">
+                            <td style="font-weight: bold">
+                            <span th:text="${mesa.idMesa}"></span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div style="width: 35px; height: 35px; background: #f0faf5; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+                                        <i class="bi bi-tablet-landscape text-success"></i>
+                                    </div>
+                                    <span th:text="#{reserva.edit.table_prefix} + ' ' + ${mesa.numMesa}" style="font-weight: 700"></span>
+                                </div>
+                            </td>
+                            <td>
+                                <i class="bi bi-people text-muted me-1"></i>
+                                <span th:text="${mesa.capacidad} + ' ' + #{mesa.list.persons}"></span>
+                            </td>
+                            <td>
+                                <span class="text-muted" th:text="${mesa.ubicacion ?: #messages.msg('mesa.list.zona_principal')}" ></span>
+                            </td>
+                            <td>
+                                <span class="badge-status" 
+                                    th:classappend="${mesa.estado == 'available' ? 'status-disponible' : 'status-ocupada'}"
+                                    th:text="${#messages.msg('mesa.status.' + #strings.toLowerCase(mesa.estado))}">
+                                Estado</span>
+                            </td>
+                            <td class="text-center" sec:authorize="hasAnyRole('GESTOR_CLIENTES', 'ADMIN', 'GERENTE')">
+                                <div style="display: flex; gap: 15px; justify-content: center; align-items: center;">
+                                    <a th:href="@{/mesas/editar/{id}(id=${mesa.idMesa})}" style="color: #2ecc71; font-size: 1.1rem; text-decoration: none;"
+                                        th:title="#{crudCommons.edit}">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <a href="#" style="color: #ef4444; font-size: 1.1rem; text-decoration: none;"
+                                    th:title="#{crudCommons.delete}" th:onclick="'setDeleteMesaId(' + ${mesa.idMesa} + ')'"
+                                    data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden">
+                <form th:action="@{/mesas/eliminar/0}" method="post" id="deleteMesaForm">
+                    <div class="modal-body" style="padding: 40px; text-align: center">
+                        <div style="width: 80px; height: 80px; background: #fee2e2; color: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem;">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                        <h3 style="color: #1e293b; margin-bottom: 10px" th:text="#{mesa.list.modal_delete_title}">Confirmar Borrado</h3>
+                        <p style="color: #64748b; margin-bottom: 5px">
+                            <span th:text="#{mesa.list.modal_delete_text}">Estás a punto de eliminar la mesa</span> 
+                            <strong id="displayMesaId">#1</strong>
+                        </p>
+                        <p style="color: #ef4444; font-size: 0.85rem; font-weight: 600"
+                        th:text="#{mesa.list.modal_delete_warn}">Esta acción no se puede deshacer y puede afectar a reservas activas.
+                        </p>
+                        <div style="display: flex; gap: 15px; margin-top: 30px">
+                            <button type="button" class="btn-action" style="flex: 1; background: #f1f5f9; color: #475569" data-bs-dismiss="modal" th:text="#{mesa.list.modal_delete_btn_cancel}">Cancelar</button>
+                            <button type="submit" style="flex: 1; padding: 12px; border: none; border-radius: 10px; background-color: #ef6a6c; color: white; font-weight: 600" th:text="#{mesa.list.modal_delete_btn_confirm}">Confirmar Borrado</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        function setDeleteMesaId(id) {
+            document.getElementById("displayMesaId").textContent = "#" + id;
+            document.getElementById("deleteMesaForm").action = "/mesas/eliminar/" + id;
+        }
+
+        window.datatableTranslations = {
+            search: "",
+            searchPlaceholder: /*[[#{crudCommons.search}]]*/ "Buscar",
+            lengthMenu: /*[[#{crudCommons.lengthMenu}]]*/ "Mostrar _MENU_ registros",
+            infoFiltered: "",
+            info: /*[[#{crudCommons.info}]]*/ "Mostrando _START_ a _END_ de <b>_TOTAL_</b> registros",
+            infoEmpty: /*[[#{crudCommons.infoEmpty}]]*/ "Mostrando 0 a 0 de 0 registros",
+            paginate: {
+                next: /*[[#{crudCommons.next}]]*/ "Siguiente",
+                previous: /*[[#{crudCommons.previous}]]*/ "Anterior",
+                first: /*[[#{crudCommons.first}]]*/ "Primero",
+                last: /*[[#{crudCommons.last}]]*/ "Último"
+            }
+        };
+
+        // Auto-dismiss alerts after 5 seconds
+        window.onload = function () {
+            // Seleccionamos las alertas por clase para asegurar que el script funcione correctamente
+            const alerts = document.querySelectorAll(".msg-alert");
+            alerts.forEach((alertElement) => {
+                setTimeout(() => {
+                    alertElement.style.transition = "opacity 0.8s ease";
+                    alertElement.style.opacity = "0";
+                    setTimeout(() => alertElement.remove(), 400);
+                }, 8000);
+            });
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{inventory.stock.title_page}">Control de Stock - Restaurantus</title>
+    <link rel="stylesheet" href="/css/user_and_roles_lists.css">
+    <link rel="icon" href="/images/favicon.png">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body>
+
+   <div th:replace="~{/page_dashboard/dashboard :: sidebar(activePage='inventory')}"></div>
+
+    <div class="admin-container">
+        <main class="main-content with-dashboard">
+            <div class="panel-header">
+                <h1 th:text="'📦 ' + #{inventory.stock.title}">📦 Gestión de Solicitudes de Almacén</h1>
+                <p th:text="#{inventory.stock.subtitle}">Control y seguimiento de pedidos de reposición de ingredientes</p>
+                <div style="margin-top: 20px;">
+                    <a th:href="@{/almacen/inventario}" class="btn-action btn-outline" style="text-decoration:none; display: inline-block; width: auto; padding: 10px 20px;"
+                    th:text="'← ' + #{inventory.form.back}">← Volver al almacen</a>
+                </div>
+            </div>
+            <div style="background-color: white; padding: 20px; border-radius: 20px; margin-top: 20px;">
+                <table id="tablaStock" class="data-table">
+                    <thead>
+                        <tr>
+                            <th th:text="#{crudCommons.id}">ID</th>
+                            <th th:text="#{inventory.list.th_name}">Ingrediente</th>
+                            <th th:text="#{inventory.stock.ordered_quantity}">Cantidad Pedida</th>
+                            <th th:text="#{inventory.stock.request_date}">Fecha Solicitud</th>
+                            <th th:text="#{inventory.stock.th_status}">Estado</th>
+                            <th class="text-center no-sort" th:text="#{crudCommons.actions}">Acción</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th><input type="text" class="input-filter" th:placeholder="#{reserva.list.ph_id}"/></th>
+                            <th><input type="text" class="input-filter" th:placeholder="#{inventory.stock.ph_ingredient}"/></th>
+                            <th></th>
+                            <th><input type="text" class="input-filter" th:placeholder="#{reserva.list.ph_date}"/></th>
+                            <th>
+                                <select class="select-filter">
+                                    <option value="" th:text="#{crudCommons.all}">Todos</option>
+                                    <option th:value="#{inventory.stock.status_pending}" th:text="#{inventory.stock.status_pending}">PENDIENTE</option>
+                                    <option th:value="#{inventory.stock.status_completed}" th:text="#{inventory.stock.status_completed}">COMPLETADO</option>
+                                </select>
+                            </th>
+                            <th></th>
+                    </thead>
+                    <tbody>
+                        <tr th:each="solicitud : ${listaSolicitudes}">
+                            <td th:text="${solicitud.id}"></td>
+                            <td th:text="${solicitud.ingrediente.nombre}" style="font-weight: bold;"></td>
+                            <td>
+                                <span th:text="${solicitud.cantidadSolicitada}"></span>
+                                <!-- <span th:text="${solicitud.ingrediente.unidadMedida}" style="color: #94a3b8; font-size: 13px; margin-left: 5px;"></span> -->
+                                <span style="color: #94a3b8; font-size: 13px; margin-left: 5px;"
+                                th:text="${solicitud.ingrediente.unidadMedida == 'L' ? #messages.msg('inventory.list.unit_l')
+                                : solicitud.ingrediente.unidadMedida == 'KG' ? #messages.msg('inventory.list.unit_kg')
+                                : solicitud.ingrediente.unidadMedida == 'G' ? #messages.msg('inventory.list.unit_g')
+                                : #messages.msg('inventory.list.unit_units')}"></span>
+                            </td>
+                            <td th:text="${#temporals.format(solicitud.fechaSolicitud, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td>
+                                <span th:if="${solicitud.estado == 'PENDIENTE'}" class="status-pill" style="background: #fef3c7; color: #92400e;" th:text="#{inventory.stock.status_pending}">PENDIENTE</span>
+                                <span th:if="${solicitud.estado == 'COMPLETADO'}" class="status-pill status-active" th:text="#{inventory.stock.status_completed}">COMPLETADO</span>
+                            </td>
+                            <td>
+                                <div th:if="${solicitud.estado == 'PENDIENTE'}" sec:authorize="hasAnyRole('GESTOR_ALMACEN', 'ADMIN', 'GERENTE')"
+                                method="post" style="display: inline;">
+                                    <a th:href="@{/almacen/stock/completar/{id}(id=${solicitud.id})}" style="width: auto; padding: 8px 16px; font-size: 14px; display: inline-block; text-decoration: none;"
+                                    class="btn-action btn-primary" th:text="'📥 ' + #{inventory.stock.btn_refill}"> 📥 Rellenar Stock</a>
+                                </div>
+                                <span th:if="${solicitud.estado == 'COMPLETADO'}" style="color: #10b981; font-weight: 600;" th:text="'✅ ' + #{inventory.stock.received}"> ✅ Recibido</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div th:if="${#lists.isEmpty(listaSolicitudes)}" 
+                    style="background: #dbeafe; color: #1e40af; padding: 20px; border-radius: 12px; text-align: center; margin-top: 20px;"
+                    th:text="#{inventory.stock.empty}">No hay solicitudes de stock registradas.
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+        window.datatableTranslations = {
+            search: "",
+            searchPlaceholder: /*[[#{crudCommons.search}]]*/ "Buscar",
+            lengthMenu: /*[[#{crudCommons.lengthMenu}]]*/ "Mostrar _MENU_ registros",
+            infoFiltered: "",
+            info: /*[[#{crudCommons.info}]]*/ "Mostrando _START_ a _END_ de <b>_TOTAL_</b> registros",
+            infoEmpty: /*[[#{crudCommons.infoEmpty}]]*/ "Mostrando 0 a 0 de 0 registros",
+            paginate: {
+                next: /*[[#{crudCommons.next}]]*/ "Siguiente",
+                previous: /*[[#{crudCommons.previous}]]*/ "Anterior",
+                first: /*[[#{crudCommons.first}]]*/ "Primero",
+                last: /*[[#{crudCommons.last}]]*/ "Último"
+            }
+        };
+    </script>
+
+</body>
+</html>

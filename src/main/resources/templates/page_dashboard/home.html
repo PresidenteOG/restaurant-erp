@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <title th:text="#{menu.home} + ' - Restaurantus'">Inicio - Restaurantus</title>
+  <link rel="icon" href="/images/favicon.png" />
+  <link rel="stylesheet" th:href="@{/css/homePage.css}" />
+  <meta name="_csrf" th:content="${_csrf.token}" />
+  <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+</head>
+
+<body>
+  <div th:replace="~{/page_dashboard/dashboard :: sidebar(activePage='home')}"></div>
+
+  <div class="admin-container">
+    <main class="main-content with-dashboard">
+      <div class="language-switcher">
+        <div class="lang-trigger">
+          <span th:text="#{idioma.language}">Idioma</span>
+        </div>
+        <div class="lang-dropdown">
+          <a th:href="@{/home?lang=es}" th:class="${#locale.language == 'es'} ? 'active' : ''"
+            th:text="#{idioma.castellano}">Español</a>
+          <a th:href="@{/home?lang=ca}" th:class="${#locale.language == 'ca'} ? 'active' : ''"
+            th:text="#{idioma.catalan}">Català</a>
+          <a th:href="@{/home?lang=en}" th:class="${#locale.language == 'en'} ? 'active' : ''"
+            th:text="#{idioma.ingles}">English</a>
+        </div>
+      </div>
+
+      
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold" th:text="#{home.title}">Inicio 🏘️</h2>
+      </div> 
+
+      <div class="hero-banner mb-5 shadow-sm">
+        <div>
+          <h1 class="fw-bold display-5"style="width: 70%;" th:text="#{home.hero.title}">
+            Gestiona tu restaurante en un solo clic
+          </h1>
+          <p class="text-muted" th:text="#{home.hero.subtitle}">
+            Todas las gestiones de un restaurante en un solo lugar.
+          </p>
+          <a th:href="@{/comenzar-trabajo}" class="btn btn-success rounded-pill px-4 py-2"
+            th:text="#{home.hero.button}">
+            Comenzar a trabajar ✔️
+          </a>
+        </div>
+        <img src="/images/plato/home/plato2.png" alt="Sushi" style="width: 300px" />
+      </div>
+
+      <h4 class="fw-bold mb-3" th:text="#{home.summary.title}">
+        Resumen de hoy
+      </h4>
+
+      <div class="kpi-grid">
+
+        <div class="kpi-card blue">
+          <h4 th:text="#{home.kpi.reservas}">Reservas hoy</h4>
+          <span class="numero kpi-value" th:text="${totalReservasHoy}">0</span>
+          <small th:text="#{home.kpi.reservas.subtitle}">Total del día</small>
+        </div>
+
+        <div class="kpi-card green">
+          <h4 th:text="#{home.kpi.pedidos}">Pedidos activos</h4>
+          <span class="kpi-value" th:text="${pedidosActivos}">0</span>
+          <small th:text="#{home.kpi.pedidos.subtitle}">En cocina ahora</small>
+        </div>
+
+        <div class="kpi-card orange">
+          <h4 th:text="#{home.kpi.mesas}">Mesas ocupadas</h4>
+          <span class="kpi-value" th:text="${mesasOcupadas}">0</span>
+          <small th:text="#{home.kpi.mesas.subtitle(${totalMesas})}">
+            de 0 mesas totales
+          </small>
+        </div>
+
+        <div class="kpi-card red" th:classappend="${incidenciasAbiertas > 0} ? 'pulse-red' : ''">
+          <h4 th:text="#{home.kpi.incidencias}">Incidencias abiertas</h4>
+          <span class="kpi-value" th:text="${incidenciasAbiertas}">0</span>
+          <small th:text="#{home.kpi.incidencias.subtitle}">Sin resolver</small>
+        </div>
+
+        <div class="kpi-card green">
+          <h4 th:text="#{home.kpi.ventas}">Ventas totales (Hoy)</h4>
+          <span class="kpi-value"
+            th:text="${#numbers.formatDecimal(totalVentas, 1, 'POINT', 2, 'COMMA')} + '€'">0,00€</span>
+          <small th:text="#{home.kpi.ventas.subtitle}">
+            Efectivo + Tarjeta
+          </small>
+        </div>
+
+      </div>
+      <script>
+        var stompClient = null;
+
+        function conectarHome() {
+          var socket = new SockJS('/ws-restaurantus');
+          stompClient = Stomp.over(socket);
+
+          stompClient.connect({}, function () {
+            console.log("Home conectado");
+
+            stompClient.subscribe('/topic/home', function (msg) {
+              var data = JSON.parse(msg.body);
+              actualizarHome(data);
+            });
+          });
+        }
+
+        function actualizarHome(data) {
+          document.getElementById("kpi-reservas").innerText = data.totalReservasHoy;
+          document.getElementById("kpi-pedidos").innerText = data.pedidosActivos;
+          document.getElementById("kpi-mesas").innerText = data.mesasOcupadas;
+          document.getElementById("kpi-incidencias").innerText = data.incidenciasAbiertas;
+          document.getElementById("kpi-ventas").innerText =
+            data.totalVentas.toFixed(2) + "€";
+        }
+
+        conectarHome();
+      </script>
+
+    </main>
+  </div>
+</body>
+
+</html>

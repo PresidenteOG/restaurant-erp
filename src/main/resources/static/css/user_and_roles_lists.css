@@ -1,0 +1,120 @@
+.search-input-wrapper {
+  min-width: 350px;
+}
+
+input[type="checkbox"] {
+  width: initial;
+}
+
+.filter-bar {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.filter-form {
+  display: flex;
+  justify-content: space-between;
+  /* Empuja filters-right al final */
+  align-items: center;
+  width: 100%;
+}
+
+.filters-left {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+}
+
+.btn-register {
+  background-color: #2ecc71;
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.btn-register:hover {
+  background-color: #27ae60;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+}
+
+.btn-register .icon {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.input-search,
+.select-filter {
+  padding: 10px 15px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-search:focus,
+.select-filter:focus {
+  border-color: #2ecc71;
+}
+
+.btn-filter {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-clear {
+  color: #64748b;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.btn-filter:hover {
+  background-color: #2563eb;
+}
+
+.user-table-avatar img {
+  transition: transform 0.2s;
+}
+
+.user-table-avatar img:hover {
+  transform: scale(1.2);
+  /* Efecto lupa al pasar el ratón */
+  z-index: 10;
+  position: relative;
+}
+
+.data-table td {
+  vertical-align: middle;
+}
+
+table.data-table thead th.no-sort::before,
+table.data-table thead th.no-sort::after {
+  display: none !important;
+  content: "" !important;
+}
+
+table.data-table thead th.no-sort {
+  padding-right: 8px !important;
+  cursor: default !important;
+  pointer-events: none;
+}
+
+#tablaUsuarios thead th:first-child,
+#tablaUsuarios thead th:last-child {
+  background-image: none !important;
+}

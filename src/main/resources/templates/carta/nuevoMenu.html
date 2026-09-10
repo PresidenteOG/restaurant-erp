@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{carta.menu.title_page}">Nuevo Menú - Restaurantus</title>
+    <link rel="icon" href="/images/favicon.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body>
+    <div class="admin-container">
+        <main class="main-content" style="max-width: 600px; margin: 0 auto;">
+            <div class="panel-header">
+                <h1 th:text="${menu.id == null} ? #{carta.menu.h1_new} : #{carta.menu.h1_edit}"></h1>
+                <a th:href="@{/carta}" class="edit-link" th:text="'← ' + #{carta.plato.back}">Volver a la carta</a>
+            </div>
+
+            <form th:action="@{/carta/menu/guardar}" th:object="${menu}" method="post" class="side-panel" style="display: block; width: 100%;">
+                <input type="hidden" th:field="*{id}">
+                
+                <div class="detail-group">
+                    <label class="detail-label" th:text="#{carta.menu.label_name}">Nombre del Menú (ej: Menú del Día)</label>
+                    <input type="text" th:field="*{nombre}" class="detail-value" style="width:100%; border:1px solid #334155; background:transparent; padding:5px;" required>
+                </div>
+
+                <div class="detail-group">
+                    <label class="detail-label" th:text="#{carta.menu.label_price}">Precio del Menú Completo (€)</label>
+                    <input type="number" step="0.01" th:field="*{precio}" class="detail-value" style="width:100%; border:1px solid #334155; background:transparent; padding:5px;" required>
+                </div>
+
+                <h3 class="detail-label" style="margin-top:20px;" th:text="#{carta.detalle.included_dishes}">Platos incluidos en este menú</h3>
+                
+                <!-- Selector de categoría -->
+                <div style="margin-bottom: 15px;">
+                    <label class="detail-label" th:text="#{carta.detalle.filter_by_cat}">Filtrar por categoría:</label>
+                    <select id="filtroCategoria" class="detail-value" style="width: 100%; background: #1e293b; color: white; border:1px solid #334155; padding:5px; border-radius: 8px;">
+                        <option value="PLATO" th:text="'🍴 ' + #{pedido.form.cat_dishes}">🍴 Platos</option>
+                        <option value="BEBIDA" th:text="'🥤 ' + #{pedido.form.cat_drinks}">🥤 Bebidas</option>
+                        <option value="POSTRE" th:text="'🍰 ' + #{pedido.form.cat_desserts}">🍰 Postres</option>
+                    </select>
+                </div>
+
+                <!-- Sección Platos -->
+                <div id="categoria-PLATO" class="categoria-section">
+                    <div style="max-height: 400px; overflow-y: auto; margin-bottom: 20px; border: 1px solid #334155; border-radius: 8px; padding: 10px;">
+                        
+                        <div th:each="plato : ${platos}" 
+                            th:if="${plato.isDisponiblePorFecha() && plato.isDisponiblePorStock()}"
+                            style="display: flex; align-items: center; gap: 12px; padding: 8px; margin-bottom: 8px; border-bottom: 1px solid #1e293b;">
+                            
+                            <img th:src="@{/images/plato/{img}(img=${plato.imgUrl != null && plato.imgUrl != '' ? plato.imgUrl : 'default.png'})}" 
+                                th:title="#{carta.plato.label_image}"
+                                style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #334155; flex-shrink: 0;">
+                            
+                            <input type="checkbox" 
+                                th:value="${plato.id}" 
+                                th:field="*{platos}"
+                                style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; accent-color: #2ab664;">
+                            
+                            <div style="flex: 1; min-width: 0;">
+                                <span th:text="${plato.nombre}" style="font-weight: 500; display: block;"></span>
+                                <span th:text="${plato.subcategoria.nombreVisible}" 
+                                    style="font-size: 0.85em; color: #94a3b8; display: block;"></span>
+                            </div>
+                            
+                            <span th:text="${plato.precio} + '€'" 
+                                style="font-weight: 600; color: #10b981; flex-shrink: 0; min-width: 60px; text-align: right;"></span>
+                        </div>
+
+                        <div th:if="${#lists.isEmpty(platos.?[isDisponiblePorFecha() && isDisponiblePorStock()])}" 
+                            style="text-align: center; color: #94a3b8; padding: 20px; font-style: italic;"
+                            th:text="#{carta.detalle.no_dishes_to_select}">
+                            No hay platos disponibles para seleccionar.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección Bebidas -->
+                <div id="categoria-BEBIDA" class="categoria-section" style="display:none;">
+                    <div style="max-height: 400px; overflow-y: auto; margin-bottom: 20px; border: 1px solid #334155; border-radius: 8px; padding: 10px;">
+                        <div th:each="bebida : ${bebidas}" 
+                             style="display: flex; align-items: center; gap: 12px; padding: 8px; margin-bottom: 8px; border-bottom: 1px solid #1e293b;">
+                            
+                            <img th:src="@{/images/plato/{img}(img=${bebida.imgUrl != null && bebida.imgUrl != '' ? bebida.imgUrl : 'default.png'})}" 
+                                 th:title="#{carta.plato.label_image}"
+                                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #334155; flex-shrink: 0;">
+                            
+                            <input type="checkbox" 
+                                   th:value="${bebida.id}" 
+                                   th:field="*{platos}"
+                                   style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;">
+                            
+                            <div style="flex: 1; min-width: 0;">
+                                <span th:text="${bebida.nombre}" style="font-weight: 500; display: block;"></span>
+                                <span th:text="${bebida.subcategoria.nombreVisible}" 
+                                      style="font-size: 0.85em; color: #94a3b8; display: block;"></span>
+                            </div>
+                            
+                            <span th:text="${bebida.precio} + '€'" 
+                                  style="font-weight: 600; color: #10b981; flex-shrink: 0; min-width: 60px; text-align: right;"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección Postres -->
+                <div id="categoria-POSTRE" class="categoria-section" style="display:none;">
+                    <div style="max-height: 400px; overflow-y: auto; margin-bottom: 20px; border: 1px solid #334155; border-radius: 8px; padding: 10px;">
+                        <div th:each="postre : ${postres}" 
+                             style="display: flex; align-items: center; gap: 12px; padding: 8px; margin-bottom: 8px; border-bottom: 1px solid #1e293b;">
+                            
+                            <img th:src="@{/images/plato/{img}(img=${postre.imgUrl != null && postre.imgUrl != '' ? postre.imgUrl : 'default.png'})}" 
+                                 th:title="#{carta.plato.label_image}"
+                                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #334155; flex-shrink: 0;">
+                            
+                            <input type="checkbox" 
+                                   th:value="${postre.id}" 
+                                   th:field="*{platos}"
+                                   style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;">
+                            
+                            <div style="flex: 1; min-width: 0;">
+                                <span th:text="${postre.nombre}" style="font-weight: 500; display: block;"></span>
+                                <span th:text="${postre.subcategoria.nombreVisible}" 
+                                      style="font-size: 0.85em; color: #94a3b8; display: block;"></span>
+                            </div>
+                            
+                            <span th:text="${postre.precio} + '€'" 
+                                  style="font-weight: 600; color: #10b981; flex-shrink: 0; min-width: 60px; text-align: right;"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-action btn-primary" th:text="#{carta.menu.btn_save}">Publicar Menú</button>
+            </form>
+        </main>
+    </div>
+
+    <script src="/js/menuForm.js"></script>
+</body>
+</html>

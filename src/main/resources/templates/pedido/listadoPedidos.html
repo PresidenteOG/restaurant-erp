@@ -1,0 +1,344 @@
+<!doctype html>
+<html
+  lang="es"
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <title th:text="#{pedido.sala.title_page}">Panel de Sala - Restaurantus</title>
+    <link rel="icon" href="/images/favicon.png" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+
+    <style>
+      /* --- ESTILOS CHAT --- */
+      .chat-z-float-btn { position: fixed; bottom: 30px; right: 30px; width: 65px; height: 65px; background: linear-gradient(135deg, #2563eb, #1e40af); color: white; border-radius: 50%; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4); display: flex; align-items: center; justify-content: center; font-size: 30px; cursor: pointer; z-index: 99999; transition: all 0.3s; }
+      .chat-z-float-btn:hover { transform: scale(1.1); }
+      .chat-z-badge { position: absolute; top: -5px; right: -5px; background-color: #ef4444; color: white; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; display: none; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
+      .chat-z-window { position: fixed; bottom: 110px; right: 30px; width: 380px; height: 550px; background: #ffffff; border-radius: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2); display: none; flex-direction: column; z-index: 99999; overflow: hidden; border: 1px solid rgba(0, 0, 0, 0.1); }
+      .chat-z-header { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+      .chat-z-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background-color: #f8fafc; }
+      .chat-z-input-area { padding: 15px; background: white; border-top: 1px solid #f1f5f9; display: flex; gap: 10px; align-items: center; }
+      .chat-z-input { flex: 1; border: 2px solid #f1f5f9; border-radius: 25px; padding: 12px 18px; outline: none; }
+      .msg-z-row { display: flex; width: 100%; margin: 0; }
+      .msg-z-row.mine { justify-content: flex-end; }
+      .msg-z-row.other { justify-content: flex-start; }
+      .msg-z-bubble { padding: 12px 18px; max-width: 75%; font-size: 0.95rem; border-radius: 18px; position: relative; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); }
+      .bubble-z-sala { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border-bottom-right-radius: 4px; }
+      .bubble-z-cocina { background: white; color: #334155; border: 1px solid #e2e8f0; border-bottom-left-radius: 4px; }
+      .msg-z-sender { font-size: 0.7rem; font-weight: 800; display: block; opacity: 0.8; margin-bottom: 2px; }
+      .msg-z-time { font-size: 0.65rem; opacity: 0.7; display: block; text-align: right; margin-top: 4px; }
+    </style>
+  </head>
+  <body>
+    <audio id="chatAudio" src="/sounds/chat.mp3" preload="auto"></audio>
+
+    <div th:replace="~{/page_dashboard/dashboard :: sidebar(activePage='orders')}"></div>
+
+    <div class="admin-container">
+      <main class="main-content with-dashboard">
+        <div class="panel-header" style="background: white; border-radius: 20px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h1 style="color: #064e3b; margin: 0" th:text="#{pedido.sala.h1}">Panel de Sala</h1>
+            <p style="color: #64748b; margin: 5px 0 0 0" th:text="#{pedido.sala.subtitle}">Control de flujo</p>
+          </div>
+          <a th:href="@{/pedidos/nuevo}" sec:authorize="hasAnyRole('CAMARERO', 'ADMIN', 'GERENTE')" class="btn-action btn-primary" style="text-decoration: none; display: flex; align-items: center; gap: 8px; width: auto; padding: 12px 24px;">
+            <span th:text="'+ ' + #{pedido.sala.btn_new}">+ TOMAR NUEVO PEDIDO</span>
+          </a>
+        </div>
+
+        <div class="container-pedidos" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+          <section class="card" style="border-radius: 20px; border: none; background: white; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+            <div class="seccion-titulo" style="border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 15px;">
+              <div style="width: 12px; height: 12px; background: #f59e0b; border-radius: 50%;"></div>
+              <h2 th:text="#{pedido.sala.kitchen_title}">En Cocina</h2>
+              <span class="indicador-cantidad" th:text="${pedidosCocina.size()}">0</span>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th th:text="#{pedido.finalizados.th_table}">Mesa</th>
+                  <th th:text="#{crudCommons.status}">Estado</th>
+                  <th th:text="#{crudCommons.actions}">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <th:block th:with="pedidosVistos=${new java.util.HashSet()}">
+                  <tr th:each="p : ${pedidosCocina}" th:if="${pedidosVistos.add(p.pedido.id)}">
+                    <td style="font-weight: bold; color: #0f172a" th:text="${p.pedido.mesa.numMesa}"></td>
+                    <td>
+                      <span th:if="${p.pedido.estado.name() == 'PENDIENTE'}" class="status-pill status-inactive" th:text="#{pedido.sala.status_pending}">PENDIENTE</span>
+                      <span th:if="${p.pedido.estado.name() == 'PREPARANDO'}" class="status-pill" style="background: #dbeafe; color: #1e40af" th:text="#{pedido.sala.status_preparing}">PREPARANDO</span>
+                    </td>
+                    <td>
+                      <div style="display: flex; gap: 10px">
+                        <a th:href="@{/pedidos/editar/{id}(id=${p.pedido.id})}" class="edit-link" th:text="#{crudCommons.edit}">Modificar</a>
+                        <a th:href="@{/pedidos/cancelar/{id}(id=${p.pedido.id})}" class="edit-link" style="color: #ef4444" th:text="#{crudCommons.cancel}" th:onclick="'return confirm(\'' + #{crudCommons.cancel} + '\')'">Cancelar</a>
+                      </div>
+                    </td>
+                  </tr>
+                </th:block>
+                <tr th:if="${pedidosCocina.isEmpty()}">
+                  <td colspan="3" style="text-align: center; color: #94a3b8; padding: 20px" th:text="#{pedido.sala.kitchen_empty}">Cocina despejada</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section class="card" style="border-radius: 20px; border: none; background: white; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+            <div class="seccion-titulo" style="border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 15px;">
+              <div style="width: 12px; height: 12px; background: #10b981; border-radius: 50%;"></div>
+              <h2 th:text="#{pedido.sala.ready_title}">Listos para Servir</h2>
+              <span class="indicador-cantidad" style="background: #059669" th:text="${listos.size()}">0</span>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th th:text="#{pedido.finalizados.th_table}">Mesa</th>
+                  <th th:text="#{pedido.sala.th_info}">Info</th>
+                  <th th:text="#{crudCommons.actions}">Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="p : ${listos}">
+                  <td style="font-weight: bold; color: #064e3b; font-size: 1.2em" th:text="${p.mesa.numMesa}"></td>
+                  <td th:text="${p.observaciones != null && !p.observaciones.isEmpty() ? p.observaciones : '-'}"></td>
+                  <td>
+                    <a th:href="@{/pedidos/entregar/{id}(id=${p.id})}" style="background: #10b981; color: white; padding: 8px 16px; font-size: 0.75rem; border-radius: 12px; font-weight: 800; text-decoration: none; text-transform: uppercase;">
+                      🍽️ <span th:text="#{pedido.sala.btn_serve}">SERVIR</span>
+                    </a>
+                  </td>
+                </tr>
+                <tr th:if="${listos.isEmpty()}">
+                  <td colspan="3" style="text-align: center; color: #94a3b8; padding: 20px" th:text="#{pedido.sala.ready_empty}">Esperando platos...</td>
+                </tr>
+              </tbody>
+            </table>
+            <a th:href="@{/pedidos/finalizados}" style="margin-top: 20px; display: inline-block; background: #10b981; color: white; padding: 10px 20px; border-radius: 12px; text-decoration: none;" th:text="#{pedido.detalle.back_finished}">Ver Pedidos Finalizados</a>
+          </section>
+        </div>
+
+        <section class="card" style="border-radius: 20px; border: none; background: #fff1f2; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+          <div class="seccion-titulo" style="border-bottom: 2px solid #fecdd3; padding-bottom: 15px; margin-bottom: 15px;">
+            <div style="width: 12px; height: 12px; background: #ef4444; border-radius: 50%;"></div>
+            <h2 style="color: #9f1239" th:text="#{pedido.sala.cancelled_title}">Pedidos Cancelados</h2>
+            <span class="indicador-cantidad" style="background: #ef4444" th:text="${cancelados.size()}">0</span>
+          </div>
+          <table id="canceladosTable" class="data-table">
+            <thead>
+              <tr>
+                <th th:text="#{reserva.list.th_id}">ID</th>
+                <th th:text="#{pedido.finalizados.th_table}">Mesa</th>
+                <th th:text="#{reserva.list.th_datetime}">Fecha</th>
+                <th th:text="#{crudCommons.status}">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="c : ${cancelados}">
+                <td style="color: #9f1239" th:text="'#' + ${c.id}"></td>
+                <td style="font-weight: bold; color: #9f1239" th:text="${c.mesa.numMesa}"></td>
+                <td style="color: #9f1239" th:text="${#temporals.format(c.fechaEntrada, 'dd/MM/yyyy HH:mm')}"></td>
+                <td><span class="status-pill" style="background: #fee2e2; color: #9f1239" th:text="#{pedido.sala.status_cancelled}">CANCELADO</span></td>
+              </tr>
+              <tr th:if="${cancelados.isEmpty()}">
+                <td colspan="4" style="text-align: center; color: #fda4af" th:text="#{pedido.sala.cancelled_empty}">No hay cancelaciones</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+
+    <div class="chat-z-float-btn" onclick="toggleChat()">
+      💬
+      <div id="chatBadge" class="chat-z-badge">0</div>
+    </div>
+
+    <div class="chat-z-window" id="chatWindow">
+      <div class="chat-z-header">
+        <div class="chat-z-title">
+          <span class="chat-z-status"></span> Chat Sala
+        </div>
+        <div class="chat-z-close" onclick="toggleChat()">✕</div>
+      </div>
+      <div class="chat-z-messages" id="chatMessages"></div>
+      <div class="chat-z-input-area">
+        <input type="text" id="chatInput" class="chat-z-input" placeholder="Mensaje..." onkeypress="if (event.key === 'Enter') sendChatMsg();" />
+        <button class="chat-z-send" onclick="sendChatMsg()">➤</button>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script th:inline="javascript">
+      var usuarioActual = /*[[${#authentication.name}]]*/ "Sala";
+      var chatAbierto = false;
+      var suscripcionPedidosActiva = false; 
+      var notificaciones = 0;
+
+      const STORAGE_KEY = 'sala_last_read_v3'; 
+      var stored = localStorage.getItem(STORAGE_KEY);
+      var lastReadDate = stored ? new Date(stored) : new Date(0);
+      var latestServerDate = new Date(0); 
+
+      function initPageConnection() {
+        var checkInterval = setInterval(function () {
+          if (window.dashboardStompClient && window.dashboardStompClient.connected) {
+            console.log("✅ Sala conectada");
+            clearInterval(checkInterval); 
+            subscribeToChannels(window.dashboardStompClient);
+          } else {
+            console.log("⏳ Sala esperando...");
+          }
+        }, 500);
+      }
+
+      function subscribeToChannels(client) {
+        if (suscripcionPedidosActiva) return; 
+
+        client.subscribe("/topic/pedidos", function (msg) {
+          console.log("🔄 Recarga pedidos...");
+          setTimeout(() => location.reload(), 200);
+        });
+
+        client.subscribe("/topic/chat_general", function (msg) {
+          var m = JSON.parse(msg.body);
+          procesarMensaje(m, true);
+        });
+
+        suscripcionPedidosActiva = true;
+        cargarHistorial();
+      }
+
+      function cargarHistorial() {
+        fetch("/api/chat/historial").then(r => r.json()).then(data => {
+            const box = document.getElementById("chatMessages");
+            box.innerHTML = ""; 
+            box.insertAdjacentHTML("beforeend", '<div style="text-align: center; color: #94a3b8; margin: 10px;">🔒 Historial</div>');
+            
+            notificaciones = 0;
+            data.forEach((m) => {
+                procesarMensaje(m, false);
+            });
+            actualizarBadge();
+        });
+      }
+
+      function procesarMensaje(m, esEnVivo) {
+          let msgDate = new Date(m.hora);
+          if (msgDate > latestServerDate) latestServerDate = msgDate;
+
+          mostrarMensaje(m.remitente, m.contenido, m.hora);
+
+          if (m.remitente.toLowerCase() !== usuarioActual.toLowerCase()) {
+              if (msgDate > lastReadDate) {
+                  if (!chatAbierto || !esEnVivo) {
+                      notificaciones++;
+                      if(esEnVivo) {
+                          actualizarBadge();
+                          playNotificationSound();
+                      }
+                  } else {
+                      marcarTodoComoLeido();
+                  }
+              }
+          } else {
+              if (esEnVivo && chatAbierto) marcarTodoComoLeido();
+          }
+      }
+
+      function marcarTodoComoLeido() {
+          notificaciones = 0;
+          actualizarBadge();
+          if (latestServerDate.getTime() > 0) {
+              lastReadDate = new Date(latestServerDate.getTime());
+          } else {
+              lastReadDate = new Date();
+          }
+          localStorage.setItem(STORAGE_KEY, lastReadDate.toISOString());
+      }
+
+      function toggleChat() {
+        var w = document.getElementById("chatWindow");
+        if (chatAbierto) {
+          w.style.display = "none";
+          chatAbierto = false;
+        } else {
+          w.style.display = "flex";
+          chatAbierto = true;
+          scrollToBottom();
+          marcarTodoComoLeido();
+        }
+      }
+      
+      function actualizarBadge() {
+          var badge = document.getElementById("chatBadge");
+          if (notificaciones > 0) {
+              badge.style.display = "flex";
+              badge.innerText = notificaciones > 9 ? "+9" : notificaciones;
+          } else {
+              badge.style.display = "none";
+          }
+      }
+
+      function playNotificationSound() {
+          var audio = document.getElementById("chatAudio");
+          if (audio) audio.play().catch(e => console.log("Audio bloqueado:", e));
+      }
+
+      function sendChatMsg() {
+        var inp = document.getElementById("chatInput");
+        var txt = inp.value.trim();
+        if (txt && window.dashboardStompClient) {
+          window.dashboardStompClient.send("/app/chat.enviar", {}, JSON.stringify({ remitente: usuarioActual, contenido: txt }));
+          inp.value = "";
+          inp.focus();
+        }
+      }
+
+      function scrollToBottom() {
+        var d = document.getElementById("chatMessages");
+        d.scrollTop = d.scrollHeight;
+      }
+
+      function mostrarMensaje(remite, texto, hora) {
+        var box = document.getElementById("chatMessages");
+        var isMe = remite.toLowerCase() === usuarioActual.toLowerCase();
+        var alignClass = isMe ? "mine" : "other";
+        
+        var nombreLower = remite.toLowerCase();
+        var isCocinaMsg = nombreLower.includes("cocina") || nombreLower.includes("chef");
+        var colorClass = isCocinaMsg ? "bubble-z-cocina" : "bubble-z-sala";
+        
+        if(isMe) { colorClass = "bubble-z-sala"; } 
+        else if (isCocinaMsg) { colorClass = "bubble-z-cocina"; }
+
+        var horaFormateada = hora;
+        if(hora && hora.includes("T")) {
+            horaFormateada = hora.split("T")[1].substring(0, 5);
+        }
+
+        var html = `
+        <div class="msg-z-row ${alignClass}">
+            <div class="msg-z-bubble ${colorClass}" style="${!isMe ? 'border: 1px solid #e2e8f0; background:white; color:#333' : ''}">
+                <span class="msg-z-sender" style="${!isMe ? 'color:#2563eb' : ''}">${remite}</span>
+                ${texto}
+                <span class="msg-z-time" style="${!isMe ? 'color:#94a3b8' : ''}">${horaFormateada}</span>
+            </div>
+        </div>`;
+
+        box.insertAdjacentHTML("beforeend", html);
+        if (chatAbierto) scrollToBottom();
+      }
+
+      window.datatableTranslations = { /* ... */ };
+      
+      initPageConnection();
+    </script>
+  </body>
+</html>

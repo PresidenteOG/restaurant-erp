@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="windows-1252">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detall Usuari</title>
+    <link rel="icon" href="/images/favicon.png">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+
+        .contenidor {
+            max-width: 700px;
+            border: 2px solid #000;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+        }
+
+        .fila {
+            margin-bottom: 15px;
+        }
+
+        .etiqueta {
+            font-weight: bold;
+            display: inline-block;
+            width: 180px;
+        }
+
+        .valor {
+            display: inline-block;
+        }
+
+        .peu {
+            margin-top: 40px;
+            text-align: right;
+            font-size: 0.9em;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+
+<div class="contenidor">
+
+    <h1>User details</h1>
+
+    <div class="fila">
+        <span class="etiqueta">Id:</span>
+        <span class="valor" th:text="${user.id}"></span>
+    </div>
+
+    <div class="fila">
+        <span class="etiqueta">Username:</span>
+        <span class="valor" th:text="${user.username}"></span>
+    </div>
+
+    <div class="fila">
+        <span class="etiqueta">Email:</span>
+        <span class="valor" th:text="${user.email}"></span>
+    </div>
+
+    <div class="fila">
+        <span class="etiqueta">Password:</span>
+        <span class="valor">(Encrypted)</span>
+    </div>
+
+    <div class="fila">
+        <span class="etiqueta">Estado:</span>
+        <span class="valor" th:text="${user.enabled} ? Enabled : Disabled"></span>
+    </div>
+
+    <div class="fila">
+        <span class="etiqueta">Phone number:</span>
+        <span class="valor" th:text="${user.phoneNumber}"></span>
+    </div>
+
+    <div class="fila">
+        <span class="etiqueta">Telegram chat id:</span>
+        <span class="valor" th:text="${user.telegramChatId}"></span>
+    </div>
+
+    <div class="fila">
+        <span class="etiqueta">Roles:</span>
+        <table>
+            <thead>
+                <tr>
+                    <th>Role Id</th>
+                    <th>Role Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="role : ${user.roles}">
+                    <td th:text="${role.id}"></td>
+                    <td th:text="${role.name}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

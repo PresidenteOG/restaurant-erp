@@ -1,0 +1,37 @@
+{"properties": [
+  {
+    "name": "telegram.bot.username",
+    "type": "java.lang.String",
+    "description": "El username del bot de telegram."
+  },
+  {
+    "name": "telegram.bot.token",
+    "type": "java.lang.String",
+    "description": "El token del bot de telegram."
+  },
+  {
+    "name": "restaurantus.max_login_attempts_until_block",
+    "type": "java.lang.String",
+    "description": "Maximo de intentos de login requeridos para que se bloquee el usuario."
+  },
+  {
+    "name": "restaurantus.open_time",
+    "type": "java.lang.String",
+    "description": "Hora de apertura del restaurante."
+  },
+  {
+    "name": "restaurantus.close_time",
+    "type": "java.lang.String",
+    "description": "Hora que cierra el restaurante."
+  },
+  {
+    "name": "restaurantus.iva_percent",
+    "type": "java.lang.String",
+    "description": "Iva a aplicar en compras."
+  },
+  {
+    "name": "restaurantus.chat_secret_key",
+    "type": "java.lang.String",
+    "description": "Clave secreta para el cifrado simetrico del chat."
+  }
+]}

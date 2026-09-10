@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sessión Expirada - Restaurantus</title>
+    <link rel="icon" href="/images/favicon.png">
+    <link rel="stylesheet" href="/css/login.css">
+</head>
+<body>
+    <div class="login-body">
+        <div class="login-card">
+            <h2 th:text="#{login.session_expired}">Sesión Expirada</h2>
+            <br><br>
+            <a type="submit" class="btn-login" th:href="@{/login?expired}"
+            style="background-color: #2752ae; text-decoration: none;" th:text="#{login.login}">Login</a>
+        </div>
+    </div>
+</body>
+</html>

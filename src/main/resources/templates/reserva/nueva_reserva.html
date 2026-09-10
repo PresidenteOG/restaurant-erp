@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{reserva.new.title_page}">Nueva Reserva - Restaurantus</title>
+    <link rel="icon" href="/images/favicon.png">
+</head>
+
+<body>
+    <div th:replace="~{page_dashboard/dashboard :: sidebar(activePage='reservations')}"></div>
+
+    <div class="admin-container">
+        <main class="main-content with-dashboard">
+            <div id="errorContainer"
+                th:class="${error == null ? 'alert alert-danger alert-dismissible fade show shadow-sm d-none' : 'alert alert-danger alert-dismissible fade show shadow-sm'}"
+                role="alert">
+                <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                <span id="errorSpan" th:text="${error}"></span> 
+            </div>
+
+            <div class="container-fluid">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold">
+                        <i class="bi bi-calendar-plus text-primary"></i> 
+                        <span th:text="#{reserva.new.h2}">Registrar Nueva Reserva</span>
+                    </h2>
+                    <a th:href="@{/reservas/listar}" class="tab-btn">
+                        <i class="bi bi-arrow-left"></i> <span th:text="#{reserva.edit.back}">Volver al listado</span>
+                    </a>
+                </div>
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <form th:action="@{/reservas/guardar}" th:object="${reserva}" method="post">
+
+                            <input type="hidden" name="idClienteExistente" id="idClienteExistente">
+
+                            <div class="row g-4">
+                                <div class="col-md-6 border-end">
+                                    <h5 class="fw-bold text-dark mb-3 border-bottom pb-2" th:text="#{reserva.new.identify_client}">Identificar Cliente</h5>
+
+                                    <div class="mb-4 position-relative">
+                                        <label class="form-label fw-bold text-primary small" th:text="#{reserva.new.already_registered}">¿Cliente ya registrado?</label>
+
+
+                                        <input type="text" id="customerInput" class="form-control border-2"
+                                            th:placeholder="#{reserva.new.search_placeholder}"
+                                            autocomplete="off">
+
+                                        <div id="customerDropdown"
+                                            class="list-group position-absolute w-100 d-none shadow"
+                                            style="max-height: 200px; overflow-y: auto; z-index: 1000;"></div>
+                                    </div>
+
+                                    <div id="nuevoClienteFields" class="p-3 bg-light rounded-3 border">
+                                        <p class="small text-muted mb-3">
+                                            <i class="bi bi-info-circle"></i> 
+                                            <span th:text="#{reserva.new.new_client_info}">Si es un cliente nuevo, completa estos datos:</span>
+                                        </p>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold" th:text="#{reserva.edit.client_name}">Nombre del Cliente</label>
+                                            <input type="text" class="form-control" th:field="*{clienteLog.nombreCliente}"
+                                            th:placeholder="#{reserva.new.name_placeholder}">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold" th:text="#{reserva.new.phone}">Teléfono</label>
+                                            <input type="text" class="form-control" th:field="*{clienteLog.telefono}"
+                                                placeholder="Ej: 600111222">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold" th:text="#{reserva.edit.client_email}">Email</label>
+                                            <input type="email" class="form-control" th:field="*{clienteLog.email}"
+                                                placeholder="customer@mail.com">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <h5 class="fw-bold text-dark mb-3 border-bottom pb-2" th:text="#{reserva.edit.modify_details}">Detalles de la Reserva</h5>
+
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold" th:text="#{reserva.edit.date_time}">Fecha y Hora</label>
+                                        <input type="datetime-local" id="fechaHora" class="form-control border-2"
+                                            th:field="*{fechaHora}" required>
+                                        <div class="d-flex justify-content-between">
+                                            <small class="text-muted">
+                                                <i class="bi bi-clock"></i>
+                                                <span th:text="#{reserva.edit.schelude} + ': ' + ${openTime} + ':00 H - ' + ${closeTime} + ':00 H'"></span>
+                                            </small>
+                                            <span id="horaError" class="text-danger small fw-bold" style="display: none;"
+                                            th:text="#{reserva.edit.bad_schelude}">Hora no permitida</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold" th:text="#{reserva.edit.label_location}">1. Elegir Ubicación</label>
+                                        <select id="ubicacionSelect" class="form-select border-2"
+                                                th:field="*{preferenciaUbicacion}" required>
+                                            <option value="" th:text="#{reserva.edit.option_select_zone}">Seleccione zona...</option>
+                                            <option value="SALA PRINCIPAL" th:text="#{reserva.edit.zone_main}">Sala Principal</option>
+                                            <option value="TERRAZA" th:text="#{reserva.edit.zone_terrace}">Terraza</option>
+                                            <option value="ZONA VIP" th:text="#{reserva.edit.zone_vip}">Zona VIP</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold" th:text="#{reserva.edit.label_table}">2. Seleccionar Mesa</label>
+                                        <select class="form-select border-2" th:field="*{mesa.idMesa}" id="mesaSelect"
+                                                disabled required>
+                                            <option value="" th:selected="true" disabled th:text="#{reserva.edit.option_first_location}">Primero elija ubicación...</option>
+
+                                            <th:block th:each="m : ${mesas}">
+                                                <option th:if="${m.estado != 'out_of_service'}" th:value="${m.idMesa}"
+                                                        th:data-ubicacion="${m.ubicacion}" 
+                                                        th:data-capacidad="${m.capacidad}"
+                                                        th:text="#{reserva.edit.table_text(${m.numMesa}, ${m.capacidad})}">
+                                                </option>
+                                            </th:block>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold" th:text="#{reserva.edit.label_pax}">3. Nº Comensales</label>
+                                        <input type="number" id="numComensales" class="form-control border-2"
+                                            th:field="*{numComensales}" min="1" disabled>
+                                        <div id="capacidadError" class="text-danger small fw-bold mt-1"
+                                            style="display: none;">
+                                            <i class="bi bi-exclamation-circle"></i> <span th:text="#{reserva.edit.error_capacity}">Supera la capacidad de la mesa.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-end mt-5 pt-3 border-top">
+                                <button type="submit" class="btn btn-success rounded-pill px-5 py-2 shadow">
+                                    <i class="bi bi-check-lg"></i> <span th:text="#{reserva.edit.btn_save}">Guardar Reserva</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        document.addEventListener('DOMContentLoaded', function () {
+            const input = document.getElementById('customerInput');
+            const dropdown = document.getElementById('customerDropdown');
+            const hiddenIdInput = document.getElementById('idClienteExistente');
+            const nuevoClienteFields = document.getElementById('nuevoClienteFields');
+            const inputFields = nuevoClienteFields.querySelectorAll('input');
+
+            const allCustomers = /*[[${clientes}]]*/[];
+
+            function closeDropdown() {
+                dropdown.classList.add('d-none');
+            }
+
+            function enableNewClientFields() {
+                inputFields.forEach(f => f.disabled = false);
+                nuevoClienteFields.style.opacity = "1";
+            }
+
+            input.addEventListener('blur', function () {
+                setTimeout(() => {
+                    if (!hiddenIdInput.value) {
+                        input.value = '';
+                        enableNewClientFields();
+                    }
+                }, 250);
+            });
+
+            input.addEventListener('input', function () {
+                const value = input.value.toLowerCase();
+                dropdown.innerHTML = '';
+
+                if (value.length === 0) {
+                    hiddenIdInput.value = '';
+                    enableNewClientFields();
+                }
+
+                if (value.length >= 1) {
+                    const filtered = allCustomers
+                        .filter(c => c.nombreCliente && c.nombreCliente.toLowerCase().includes(value))
+                        .slice(0, 10);
+
+                    filtered.forEach(c => {
+                        const idKey = Object.keys(c).find(key => key.toLowerCase().includes('id'));
+                        const actualId = idKey ? c[idKey] : 'N/A';
+
+                        const item = document.createElement('button');
+                        item.type = 'button';
+                        item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+
+                        item.innerHTML = `
+                    <div>
+                        <span class="badge bg-primary me-2">ID: ${actualId}</span>
+                        <span>${c.nombreCliente}</span>
+                    </div>
+                    <small class="text-muted">${c.telefono || ''}</small>
+                `;
+
+                        item.addEventListener('click', function () {
+                            input.value = c.nombreCliente;
+                            hiddenIdInput.value = actualId;
+
+                            inputFields.forEach(f => {
+                                f.disabled = true;
+                                f.value = "";
+                            });
+                            nuevoClienteFields.style.opacity = "0.5";
+
+                            closeDropdown();
+                        });
+
+                        dropdown.appendChild(item);
+                    });
+
+                    if (filtered.length > 0) {
+                        dropdown.classList.remove('d-none');
+                    } else {
+                        closeDropdown();
+                    }
+                } else {
+                    closeDropdown();
+                }
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!dropdown.contains(e.target) && e.target !== input) {
+                    closeDropdown();
+                }
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const mesaSelect = document.getElementById('mesaSelect');
+            const ubicacionInput = document.getElementById('ubicacionDisplay');
+
+            mesaSelect.addEventListener('change', function () {
+                // Obtenemos la opción seleccionada
+                const selectedOption = mesaSelect.options[mesaSelect.selectedIndex];
+
+                // Extraemos la ubicación del atributo data-ubicacion que pusimos en el HTML
+                const ubicacion = selectedOption.getAttribute('data-ubicacion');
+
+                if (ubicacion) {
+                    ubicacionInput.value = ubicacion;
+                } else {
+                    ubicacionInput.value = "";
+                }
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const mesaSelect = document.getElementById('mesaSelect');
+            const ubicacionInput = document.getElementById('ubicacionDisplay');
+            const numComensalesInput = document.getElementById('numComensales');
+            const errorDiv = document.getElementById('capacidadError');
+            const submitBtn = document.querySelector('button[type="submit"]');
+
+            function validarCapacidad() {
+                const selectedOption = mesaSelect.options[mesaSelect.selectedIndex];
+                if (!selectedOption || selectedOption.value === "") return;
+
+                const ubicacion = selectedOption.getAttribute('data-ubicacion');
+                const capacidadMax = parseInt(selectedOption.getAttribute('data-capacidad'));
+                // Si el input está vacío, usamos 1 para la lógica
+                let comensales = parseInt(numComensalesInput.value);
+                if (isNaN(comensales)) comensales = 1;
+
+                // 1. Auto-asignar ubicación
+                ubicacionInput.value = ubicacion || "";
+
+                // 2. Validar capacidad
+                if (comensales > capacidadMax) {
+                    errorDiv.style.display = 'block';
+                    numComensalesInput.classList.add('is-invalid');
+                    submitBtn.disabled = true; // Bloquea el envío
+                } else {
+                    errorDiv.style.display = 'none';
+                    numComensalesInput.classList.remove('is-invalid');
+                    submitBtn.disabled = false;
+                }
+            }
+
+            mesaSelect.addEventListener('change', validarCapacidad);
+            numComensalesInput.addEventListener('input', validarCapacidad);
+
+            if (mesaSelect.value) validarCapacidad();
+        });
+
+        // LOGICA 
+        document.addEventListener('DOMContentLoaded', function () {
+            // 1. REFERENCIAS DE ELEMENTOS
+            const ubicacionSelect = document.getElementById('ubicacionSelect');
+            const mesaSelect = document.getElementById('mesaSelect');
+            const numComensalesInput = document.getElementById('numComensales');
+            const fechaInput = document.getElementById('fechaHora');
+            const errorDiv = document.getElementById('capacidadError');
+            const submitBtn = document.querySelector('button[type="submit"]');
+            const strChooseLoc = /*[[#{reserva.edit.first_select_zone}]]*/ 'Primero elija ubicación...';
+
+            // 2. CONFIGURACIÓN INICIAL
+            // Clonamos todas las opciones originales de las mesas para poder filtrar después
+            const todasLasMesas = Array.from(mesaSelect.options);
+
+            // Limpieza inicial: Forzamos que el select de mesas esté vacío al cargar la página
+            if (!ubicacionSelect.value) {
+                mesaSelect.innerHTML = '<option value="" disabled selected>' + strChooseLoc + '</option>';
+                mesaSelect.disabled = true;
+                numComensalesInput.disabled = true;
+            }
+
+            // Bloquear fechas pasadas en el calendario
+            const ahora = new Date();
+            const ahoraISO = new Date(ahora.getTime() - ahora.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            fechaInput.min = ahoraISO;
+
+            // 3. FUNCIONES DE VALIDACIÓN
+            function validarCapacidad() {
+                const selectedOption = mesaSelect.options[mesaSelect.selectedIndex];
+                if (!selectedOption || !selectedOption.value) return;
+
+                const capacidadMax = parseInt(selectedOption.getAttribute('data-capacidad'));
+
+                // Si el usuario no escribe nada, asumimos 1 para la validación visual
+                let comensales = parseInt(numComensalesInput.value);
+                if (isNaN(comensales)) comensales = 1;
+
+                if (comensales > capacidadMax) {
+                    errorDiv.style.display = 'block';
+                    numComensalesInput.classList.add('is-invalid');
+                    submitBtn.disabled = true;
+                } else {
+                    errorDiv.style.display = 'none';
+                    numComensalesInput.classList.remove('is-invalid');
+                    checkFormValidity(); // Revisa si otros campos (como la hora) permiten activar el botón
+                }
+            }
+
+            function checkFormValidity() {
+                const fechaVal = new Date(fechaInput.value);
+                const hora = fechaVal.getHours();
+
+                // Solo habilitar si la hora es correcta (11 a 23) y la capacidad es válida
+                const horaValida = (hora >= 11 && hora < 23);
+                const capacidadValida = errorDiv.style.display === 'none';
+
+                submitBtn.disabled = !(horaValida && capacidadValida && mesaSelect.value);
+            }
+
+            // 4. EVENTOS (LISTENERS)
+
+            // Evento: Cambio de Ubicación (Filtra mesas)
+            ubicacionSelect.addEventListener('change', function () {
+                const zona = this.value;
+                const strSelectMesa = /*[[#{reserva.edit.select_a_table}]]*/ 'Seleccione una mesa...';
+
+                // Resetear select de mesas
+                mesaSelect.innerHTML = '<option value="" disabled selected>' + strSelectMesa + '</option>';
+                numComensalesInput.value = '1'; // Valor por defecto
+                numComensalesInput.disabled = true;
+                errorDiv.style.display = 'none';
+
+                if (zona) {
+                    const filtradas = todasLasMesas.filter(opt => opt.getAttribute('data-ubicacion') === zona);
+                    filtradas.forEach(opt => {
+                        const clone = opt.cloneNode(true);
+                        clone.disabled = false; // Aseguramos que las mesas filtradas se puedan elegir
+                        mesaSelect.appendChild(clone);
+                    });
+                    mesaSelect.disabled = false;
+                } else {
+                    mesaSelect.disabled = true;
+                    mesaSelect.innerHTML = '<option value="" disabled selected>' + strChooseLoc + '</option>';
+                }
+                checkFormValidity();
+            });
+
+            // Evento: Selección de Mesa
+            mesaSelect.addEventListener('change', function () {
+                if (this.value) {
+                    numComensalesInput.disabled = false;
+                    validarCapacidad();
+                }
+            });
+
+            // Evento: Cambio de número de comensales
+            numComensalesInput.addEventListener('input', validarCapacidad);
+
+            // Evento: Validación de Horario (12:00 AM - 11:00 PM)
+            fechaInput.addEventListener('blur', function () {
+                if (!this.value) return;
+
+                const fechaSeleccionada = new Date(this.value);
+                const ahora = new Date();
+
+                // Resetear segundos y milisegundos para una comparación justa
+                ahora.setSeconds(0, 0);
+
+                const hora = fechaSeleccionada.getHours();
+                const minutos = fechaSeleccionada.getMinutes();
+
+                const container = document.getElementById('errorContainer');
+                const span = document.getElementById('errorSpan');
+
+                // 1. Validar si la fecha es anterior a "ahora"
+                const esFechaPasada = fechaSeleccionada < ahora;
+
+                const horaApertura = /*[[${openTime}]]*/ 12;
+                const horaCierre = /*[[${closeTime}]]*/ 23;
+
+                // 2. Validar Rango de Horas (12:00 PM a 11:00 PM)
+                const horaInvalida = (hora < horaApertura || hora >= horaCierre);
+
+                // 3. Validar Intervalos de 15 minutos
+                const minutosInvalidos = (minutos % 15 !== 0);
+
+                if (esFechaPasada || horaInvalida || minutosInvalidos) {
+                    // Prioridad de mensajes de error
+                    if (esFechaPasada) {
+                        span.innerText = /*[[#{reserva.edit.error_past_time}]]*/ "No se pueden realizar reservas para fechas o horas pasadas.";
+                        this.value = ""; // Borrar la fecha escrita, solo en este caso
+                    } else if (horaInvalida) {
+                        span.innerText = /*[[#{reserva.edit.error_out_time(${openTime}, ${closeTime})}]]*/ "El restaurante solo acepta reservas entre las " + horaApertura + ":00 H y las " + horaCierre + ":00 H.";
+                    } else {
+                        span.innerText = /*[[#{reserva.edit.error_interval}]]*/ "Por favor, elija un intervalo de 15 minutos (:00, :15, :30 o :45).";
+                    }
+
+                    // Mostrar el error usando tu contenedor th:text="${error}"
+                    container.classList.remove('d-none');
+                    container.style.display = 'block';
+
+                    this.focus();
+                } else {
+                    container.classList.add('d-none');
+                    container.style.display = 'none';
+                    checkFormValidity();
+                }
+            });
+        });
+    </script>
+
+
+</body>
+
+</html>

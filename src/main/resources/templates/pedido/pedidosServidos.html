@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{pedido.finalizados.title_page}">Pedidos Finalizados - Restaurantus</title>
+    <link rel="icon" href="/images/favicon.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/user_and_roles_lists.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body>
+    <div th:replace="~{/page_dashboard/dashboard :: sidebar(activePage='orders')}"></div>
+
+    <div class="admin-container">
+        <main class="main-content with-dashboard">
+            
+            <div class="panel-header">
+                <h1 th:text="#{pedido.finalizados.h1}">Pedidos Finalizados</h1>
+                <p th:text="#{pedido.finalizados.subtitle}">Listado de pedidos ya finalizados</p>
+            </div>
+
+            <div style="margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <a th:href="@{/pedidos/listado}" sec:authorize="hasAnyRole('CAMARERO', 'CAJA', 'ADMIN', 'GERENTE')"
+                   class="btn-action btn-primary" style="text-decoration:none; display: inline-block; width: auto; padding: 10px 20px;">
+                   ← <span th:text="#{pedido.detalle.back_active}">Volver a pedidos activos</span>
+                </a>
+
+                <a th:href="@{/finanzas/pendientesCobro}" sec:authorize="hasAnyRole('CAJA', 'FACTURISTA', 'ADMIN', 'GERENTE')"
+                   class="btn-action btn-primary" style="text-decoration:none; display: inline-block; width: auto; padding: 10px 20px;">
+                   ← <span th:text="#{pedido.detalle.back_billing}">Volver a pedidos por cobrar</span>
+                </a>
+
+                <a th:href="@{/cocina/pendientes}" sec:authorize="hasAnyRole('JEFE_COCINA', 'COCINERO', 'ADMIN', 'GERENTE')"
+                   class="btn-action btn-primary" style="text-decoration:none; display: inline-block; width: auto; padding: 10px 20px;">
+                   ← <span th:text="#{pedido.detalle.back_kitchen}">Volver a cocina</span>
+                </a>
+            </div>
+
+            <div style="background-color: white; padding: 20px; border-radius: 8px; margin-top: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                
+                <table id="tablaFinalizados" class="data-table">
+                    <thead>
+                        <tr>
+                            <th th:text="#{pedido.finalizados.th_id}">ID Pedido</th>
+                            <th th:text="#{pedido.finalizados.th_table}">Mesa</th>
+                            <th sec:authorize="hasAnyRole('CAJA', 'FACTURISTA', 'ADMIN', 'GERENTE')" class="text-center no-sort"
+                                th:text="#{pedido.finalizados.th_invoice}">Factura</th>
+                            <th class="text-center no-sort" th:text="#{crudCommons.actions}">Acciones</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th><input type="text" placeholder="ID..."></th>
+                            <th><input type="text" th:placeholder="#{pedido.finalizados.th_table} + '...'"></th>
+                            <th sec:authorize="hasAnyRole('CAJA', 'FACTURISTA', 'ADMIN', 'GERENTE')"></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="p : ${pedidos}">
+                            <td th:text="${p.id}"></td>
+                            <td th:text="${p.mesa != null ? p.mesa.numMesa : 'N/A'}"></td>
+                            <td sec:authorize="hasAnyRole('CAJA', 'FACTURISTA', 'ADMIN', 'GERENTE')">
+                                <a th:href="@{/finanzas/descargarFactura/{id}(id=${p.id})}" class="btn-action" 
+                                   style="background-color: #f59e0b; padding: 2px 12px; font-size: 0.9em; text-decoration: none; color: white; border-radius: 6px;">
+                                    📄 <span th:text="#{pedido.finalizados.btn_invoice}">Factura</span>
+                                </a>
+                            </td>
+                            <td>
+                                <a th:href="@{/pedidos/detalle/{id}(id=${p.id})}" class="edit-link" th:text="#{pedido.finalizados.view_details}"> Ver detalles</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div th:if="${#lists.isEmpty(pedidos)}" style="text-align: center; padding: 40px; color: #94a3b8">
+                    <p th:text="#{pedido.finalizados.empty}">No hay pedidos finalizados en el historial.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+        window.datatableTranslations = {
+            search: "",
+            searchPlaceholder: /*[[#{crudCommons.search}]]*/ "Buscar",
+            lengthMenu: /*[[#{crudCommons.lengthMenu}]]*/ "Mostrar _MENU_ registros",
+            infoFiltered: "",
+            info: /*[[#{crudCommons.info}]]*/ "Mostrando _START_ a _END_ de <b>_TOTAL_</b> registros",
+            infoEmpty: /*[[#{crudCommons.infoEmpty}]]*/ "Mostrando 0 a 0 de 0 registros",
+            paginate: {
+                next: /*[[#{crudCommons.next}]]*/ "Siguiente",
+                previous: /*[[#{crudCommons.previous}]]*/ "Anterior",
+                first: /*[[#{crudCommons.first}]]*/ "Primero",
+                last: /*[[#{crudCommons.last}]]*/ "Último"
+            }
+        };
+    </script>
+</body>
+</html>

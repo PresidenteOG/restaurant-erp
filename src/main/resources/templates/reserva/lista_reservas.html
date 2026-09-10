@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{reserva.list.title_page}">Gestión de Reservas - Restaurantus</title>
+    <link rel="stylesheet" href="/css/user_and_roles_lists.css">
+    <link rel="icon" th:href="@{${faviconPath}}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">  
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">    
+
+    <style>
+        #customerDropdown {
+            z-index: 1050;
+            max-height: 250px;
+            overflow-y: auto;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            background: white;
+        }
+
+        .badge-loc {
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        #tablaReservas thead tr:first-child th {
+            border-bottom: none !important;
+            padding-bottom: 5px !important;
+        }
+
+        /* Ocultar el buscador general original */
+        .dataTables_filter {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div th:replace="~{/page_dashboard/dashboard :: sidebar(activePage='reservations')}"></div>
+
+    <div class="admin-container">
+        <main class="main-content with-dashboard">
+
+            <div class="panel-header"
+                style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>
+                        <i class="bi bi-calendar-check-fill" style="color: #2ecc71; margin-right: 12px;"></i>
+                        <span th:text="#{reserva.list.h1}">Gestión de Reservas</span>
+                    </h1>
+                    <p th:text="#{reserva.list.subtitle}">Visualiza y administra las próximas visitas de tus clientes registrados.</p>
+                </div>
+                <div>
+                    <a th:href="@{/reservas/nueva}" class="btn-action btn-primary"
+                        style="text-decoration:none; display: inline-block; width: auto; padding: 10px 25px; background-color: #2ecc71; border: none; border-radius: 8px; font-weight: 600; color: white;">
+                        <i class="bi bi-calendar-plus"></i>
+                        <span th:text="#{reserva.list.btn_new}">Nueva Reserva</span>
+                    </a>
+                </div>
+            </div>
+            
+            <div
+                style="background-color: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                <table id="tablaReservas" class="data-table">
+                    <thead>
+                        <tr>
+                            <th th:text="#{reserva.list.th_id}">ID</th>
+                            <th th:text="#{reserva.list.th_datetime}">FECHA Y HORA</th>
+                            <th th:text="#{reserva.list.th_pax}">PAX</th>
+                            <th th:text="#{reserva.list.th_customer}">CLIENTE</th>
+                            <th th:text="#{reserva.list.th_table}">MESA</th>
+                            <th th:text="#{reserva.list.th_location}">UBICACIÓN</th>
+                            <th th:text="#{reserva.list.th_state}">ESTADO</th>
+                            <th th:text="#{reserva.list.th_user}">USUARIO</th>
+                            <th class="text-center no-sort" sec:authorize="hasAnyRole('GESTOR_CLIENTES', 'ADMIN', 'GERENTE', 'CAMARERO')"
+                             th:text="#{crudCommons.actions}">ACCIONES</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th><input type="text" th:placeholder="#{reserva.list.ph_id}"></th>
+                            <th><input type="text" th:placeholder="#{reserva.list.ph_date}"></th>
+                            <th><input type="text" th:placeholder="#{reserva.list.ph_pax}"></th>
+                            <th><input type="text" th:placeholder="#{reserva.list.ph_client}"></th>
+                            <th><input type="text" th:placeholder="#{reserva.list.ph_table}"></th>
+                            <th><input type="text" th:placeholder="#{reserva.list.ph_zone}"></th>
+                            <th>
+                                <select class="select-filter">
+                                    <option value="" th:text="#{crudCommons.all}">Todos</option>
+                                    <option th:value="#{reserva.list.state_open}" th:text="#{reserva.list.state_open}">Abierta</option>
+                                    <option th:value="#{reserva.list.state_closed}" th:text="#{reserva.list.state_closed}">Cerrada</option>
+                                </select>
+                            </th>
+                            <th><input type="text" th:placeholder="#{reserva.list.ph_user}"></th>
+                            <th sec:authorize="hasAnyRole('GESTOR_CLIENTES', 'ADMIN', 'GERENTE', 'CAMARERO')"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="reserva : ${reservations}">
+                            <td th:text="${reserva.idReserva}" style="font-weight: bold;"></td>
+                            <td>
+                                <div th:text="${#temporals.format(reserva.fechaHora, 'dd/MM/yyyy')}"
+                                    style="font-weight: bold;"></div>
+                                <small class="text-muted"
+                                    th:text="${#temporals.format(reserva.fechaHora, 'HH:mm')}"></small>
+                            </td>
+                            <td th:text="${reserva.numComensales}"></td>
+                            <td>
+                                <div th:text="${reserva.clienteLog?.nombreCliente ?: #messages.msg('reserva.list.anonymous')}"
+                                    style="font-weight: bold;"></div>
+                                <small class="text-muted">
+                                    <i class="bi bi-telephone"></i>
+                                    <span
+                                        th:text="${reserva.clienteLog?.telefono != null and reserva.clienteLog?.telefono != '' ? reserva.clienteLog.telefono : #messages.msg('reserva.list.noPhone')}"></span>
+                                </small>
+                            </td>
+                            <td>
+                                <span
+                                    style="background: #dcfce7; color: #16a34a; padding: 4px 10px; border-radius: 15px; font-size: 0.85rem; font-weight: 600;"
+                                    th:text="#{reserva.list.filter_table} + ' ' + ${reserva.mesa?.numMesa}"></span>
+                            </td>
+
+                            <td th:switch="${reserva.preferenciaUbicacion}">
+                                <span th:case="'SALA PRINCIPAL'" class="badge-loc" style="background: #fef3c7; color: #92400e;"
+                                    th:text="${reserva.preferenciaUbicacion}"></span>
+                                <span th:case="'TERRAZA'" class="badge-loc" style="background: #e0f2fe; color: #0369a1;"
+                                    th:text="${reserva.preferenciaUbicacion}"></span>
+                                <span th:case="'ZONA VIP'" class="badge-loc" style="background: #fae8ff; color: #86198f;"
+                                    th:text="${reserva.preferenciaUbicacion}"></span>                                 
+                                <span th:case="*" class="badge-loc" style="background: #f3f4f6; color: #374151;"
+                                    th:text="${reserva.preferenciaUbicacion ?: 'N/A'}"></span>
+                            </td>
+                            <td><span
+                                    th:class="${reserva.activa == 1} ? 'status-pill status-active' : 'status-pill status-inactive'"
+                                    th:text="${reserva.activa == 1} ? #{reserva.list.state_open} : #{reserva.list.state_closed}">Status</span>
+                            </td>
+                            <td>
+                                <div th:text="'ID: ' + ${reserva.usuario?.id ?: 'N/A'}" style="font-weight: 600;"></div>
+                                <small class="text-muted" th:text="${reserva.usuario?.username ?: #messages.msg('reserva.list.system')}"></small>
+                            </td>
+                            <td class="text-end pe-4" sec:authorize="hasAnyRole('GESTOR_CLIENTES', 'CAMARERO', 'ADMIN', 'GERENTE')">
+                                <div style="display: flex; gap: 15px; justify-content: right; align-items: right;">
+
+                                    <!-- Camarero y Gestor de Clientes -->
+                                    <a sec:authorize="hasAnyRole('CAMARERO', 'GESTOR_CLIENTES', 'ADMIN', 'GERENTE')" th:if="${reserva.activa == 1}" th:href="@{/pedidos/pedidoReserva/{id}(id=${reserva.idReserva})}" 
+                                    class="btn-recibir"
+                                    style="color: #6366f1; font-size: 1.2rem; text-decoration: none;" 
+                                    th:title="#{reserva.list.receive_customer}">
+                                        <i class="bi bi-person-check-fill"></i>
+                                    </a>
+
+                                    <!-- Sólo Gestor de Clientes -->
+                                    <a sec:authorize="hasAnyRole('GESTOR_CLIENTES', 'ADMIN', 'GERENTE')" th:href="@{/reservas/editar/{id}(id=${reserva.idReserva})}"
+                                        style="color: #2ecc71; font-size: 1.1rem; text-decoration: none;"
+                                        th:title="#{crudCommons.edit}">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+
+                                    <!-- Sólo Gestor de Clientes -->
+                                    <th:block sec:authorize="hasAnyRole('GESTOR_CLIENTES', 'ADMIN', 'GERENTE')">
+                                        <a href="#" class="delete-link"
+                                            style="color: #ef4444; font-size: 1.1rem; text-decoration: none;"
+                                            th:title="#{crudCommons.delete}" th:onclick="'setDeleteId(' + ${reserva.idReserva} + ')'"
+                                            data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </th:block>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <form th:action="@{/reservas/eliminar/0}" method="post" id="deleteForm">
+                    <div class="modal-body p-4 text-center">
+                        <div class="text-danger mb-3"><i class="bi bi-exclamation-octagon" style="font-size: 3rem;"></i>
+                        </div>
+                        <h4 style="font-weight: 700;" th:text="#{reserva.list.modal_title}">¿Eliminar reserva?</h4>
+                        <p class="text-muted" th:text="#{reserva.list.modal_text_prefix}">Estás a punto de cancelar la reserva <strong>#<span
+                                    id="displayId"></span></strong>.</p>
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="button" class="btn-cancel" data-bs-dismiss="modal"
+                                style="flex: 1; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; font-weight: 600;"
+                                th:text="#{userUpdate.btn_cancel}">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="btn-primary"
+                                style="flex: 1; padding: 12px; border: none; border-radius: 10px; background-color: #ef6a6c; color: white; font-weight: 600;"
+                                th:text="#{reserva.list.modal_confirm}">
+                                Confirmar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+     
+
+    <script th:inline="javascript">
+        function setDeleteId(id) {
+            document.getElementById('displayId').textContent = id;
+            document.getElementById('deleteForm').action = '/reservas/eliminar/' + id;
+        }
+
+        $(document).ready(function () {
+            
+
+            // LÓGICA DE BÚSQUEDA ACTUALIZADA
+            const input = document.getElementById('customerInput');
+            const dropdown = document.getElementById('customerDropdown');
+            const allCustomers = /*[[${allCustomers}]]*/[];
+
+            if (input) {
+                input.addEventListener('input', function () {
+                    const val = this.value.toLowerCase();
+                    dropdown.innerHTML = '';
+
+                    if (val.length > 0) {
+                        const filtered = allCustomers
+                            .filter(c => c.nombreCliente && c.nombreCliente.toLowerCase().includes(val))
+                            .slice(0, 8);
+
+                        filtered.forEach(c => {
+                            // Detectar ID dinámicamente
+                            const idKey = Object.keys(c).find(key => key.toLowerCase().includes('id'));
+                            const actualId = idKey ? c[idKey] : 'N/A';
+
+                            const btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center border-0';
+
+                            // Diseño del item: ID Badge + Nombre + Teléfono
+                            btn.innerHTML = `
+                                <div>
+                                    <span class="badge bg-primary me-2" style="font-size: 0.7rem;">ID: ${actualId}</span>
+                                    <strong>${c.nombreCliente}</strong>
+                                </div>
+                                <small class="text-muted">${c.telefono || ''}</small>
+                            `;
+
+                            btn.onclick = () => {
+                                input.value = c.nombreCliente;
+                                dropdown.classList.add('d-none');
+                            };
+                            dropdown.appendChild(btn);
+                        });
+
+                        if (filtered.length > 0) {
+                            dropdown.classList.remove('d-none');
+                        } else {
+                            dropdown.classList.add('d-none');
+                        }
+                    } else {
+                        dropdown.classList.add('d-none');
+                    }
+                });
+
+                // Cerrar al hacer clic fuera
+                document.addEventListener('click', function (e) {
+                    if (!dropdown.contains(e.target) && e.target !== input) {
+                        dropdown.classList.add('d-none');
+                    }
+                });
+            }
+        });
+
+        window.datatableTranslations = {
+            search: "",
+            searchPlaceholder: /*[[#{crudCommons.search}]]*/ "Buscar",
+            lengthMenu: /*[[#{crudCommons.lengthMenu}]]*/ "Mostrar _MENU_ registros",
+            infoFiltered: "",
+            info: /*[[#{crudCommons.info}]]*/ "Mostrando _START_ a _END_ de <b>_TOTAL_</b> registros",
+            infoEmpty: /*[[#{crudCommons.infoEmpty}]]*/ "Mostrando 0 a 0 de 0 registros",
+            paginate: {
+                next: /*[[#{crudCommons.next}]]*/ "Siguiente",
+                previous: /*[[#{crudCommons.previous}]]*/ "Anterior",
+                first: /*[[#{crudCommons.first}]]*/ "Primero",
+                last: /*[[#{crudCommons.last}]]*/ "Último"
+            }
+        };
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{inventory.form.title_page}">Ingrediente - Restaurantus</title>
+    <link rel="icon" href="/images/favicon.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    
+</head>
+<body>
+    <div class="admin-container">
+        <main class="main-content" style="max-width: 600px; margin: 0 auto;">
+            <div class="panel-header">
+                <h1 th:text="${ingrediente.id == null} ? #{inventory.form.new_title} : #{inventory.form.edit_title}"></h1>
+                <a th:href="@{/almacen/inventario}" class="edit-link" th:text="'← ' + #{inventory.form.back}">← Volver al inventario</a>
+            </div>
+
+            <form th:action="@{/almacen/guardar}" th:object="${ingrediente}" method="post" class="side-panel" style="display: block; width: 100%;">
+                <input type="hidden" th:field="*{id}">
+
+                <div class="detail-group">
+                    <label class="detail-label" th:text="#{inventory.form.label_name}">Nombre del Ingrediente</label>
+                    <input type="text" th:field="*{nombre}" class="detail-value" 
+                           style="width:100%; border:1px solid #334155; background:transparent; padding:8px; border-radius:4px;" 
+                           th:placeholder="#{inventory.form.placeholder_name}" required>
+                </div>
+
+                <div class="detail-group">
+                    <label class="detail-label" th:text="#{inventory.list.th_stock}">Stock Actual</label>
+                    <input type="number" th:field="*{stockActual}" class="detail-value" step="any"
+                           style="width:100%; border:1px solid #334155; background:transparent; padding:8px; border-radius:4px;" 
+                           required>
+                </div>
+
+                <div class="detail-group">
+                    <label class="detail-label" th:text="#{inventory.form.label_location}">Ubicación</label>
+                    <input type="text" th:field="*{ubicacion}" class="detail-value" 
+                           style="width:100%; border:1px solid #334155; background:transparent; padding:8px; border-radius:4px;" 
+                           placeholder="Ej: P(PASILLO) 0, F(FILA) 0 ..." required>
+                </div>
+
+                <div class="detail-group">
+                    <label class="detail-label" th:text="#{inventory.form.label_price}">Precio Unitario (€)</label>
+                    <input type="text" th:field="*{precioUnitario}" inputmode="decimal" placeholder="Ej: 2.50" style="width:100%; border:1px solid #334155; background:transparent; padding:8px; border-radius:4px;" required>
+                </div>
+
+                <div class="detail-group">
+                    <label class="detail-label" th:text="#{inventory.form.label_unit}">Unidad de Medida</label>
+                    <select th:field="*{unidadMedida}" class="detail-value" 
+                            style="width:100%; border:1px solid #334155; background:#1e293b; color:white; padding:8px; border-radius:4px;">
+                        <option value="KG" th:text="#{inventory.list.unit_kg}">Kilogramos (KG)</option>
+                        <option value="L" th:text="#{inventory.list.unit_l}">Litros (L)</option>
+                        <option value="UNIDADES" th:text="#{inventory.list.unit_units}">Unidades</option>
+                        <option value="G" th:text="#{inventory.list.unit_g}">Gramos (G)</option>
+                    </select>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <button type="submit" class="btn-action btn-primary" th:text="#{inventory.form.btn_save}">Guardar Ingrediente</button>
+                </div>
+            </form>
+        </main>
+    </div>
+</body>
+</html>

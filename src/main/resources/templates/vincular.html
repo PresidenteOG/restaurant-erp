@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{telegram.title_page}">Vincular Telegram</title>
+    <link rel="icon" href="/images/favicon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 90%; }
+        
+        .token-box { 
+            font-size: 2.5em; 
+            font-weight: bold; 
+            letter-spacing: 3px; 
+            background: #e0f2fe; 
+            color: #0284c7; 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin: 20px 0; 
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+        .token-box:hover { background: #bae6fd; }
+        .token-box:active { transform: scale(0.98); }
+        
+        .btn { background: #229ED9; color: white; padding: 12px 30px; border-radius: 50px; text-decoration: none; font-weight: bold; display: inline-block; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(34, 158, 217, 0.3); }
+        .status { margin-top: 20px; color: #64748b; font-size: 0.9em; display: flex; align-items: center; justify-content: center; gap: 8px;}
+        .hint { font-size: 0.85em; color: #94a3b8; margin-top: 5px;}
+        
+        /* Animación de carga */
+        .spinner { width: 16px; height: 16px; border: 3px solid #cbd5e1; border-top-color: #229ED9; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Mensaje de copiado */
+        .copy-tooltip { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px; opacity: 0; transition: opacity 0.3s; pointer-events: none;}
+        .token-box.copied .copy-tooltip { opacity: 1; }
+    </style>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+
+    <div class="card">
+        <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 240 240"><path fill="#229ED9" d="M120 240C53.726 240 0 186.274 0 120S53.726 0 120 0s120 53.726 120 120-53.726 120-120 120z"/><path fill="#FFF" d="M54.269 122.998l105.748-44.602c4.912-2.146 10.742 1.346 9.07 8.016l-18.006 84.887c-1.353 6.38-7.986 8.794-13.056 4.757l-35.845-26.438-17.3 16.666c-1.916 1.846-5.184 1.182-5.746-1.42l-6.289-30.824-30.59-9.553c-6.665-2.083-6.494-11.66 0.284-13.489z"/></svg>
+        
+        <h2 th:text="#{telegram.h1}">Vincular Telegram</h2>
+        <p style="color: #64748b;" th:text="#{telegram.subtitle}">Pulsa el código para copiarlo y envíalo al bot.</p>
+
+        <div class="token-box" id="tokenBox" onclick="copiarToken()">
+            <span id="tokenText" th:text="${token}">CODE</span>
+            <span class="copy-tooltip" th:text="#{telegram.copied}">¡Copiado!</span>
+        </div>
+
+        <a th:href="${telegramLink}" target="_blank" class="btn" th:text="#{telegram.btn_chat}">Abrir Chat con Bot</a>
+
+        <div class="hint" th:text="#{telegram.hint}">Si el enlace no funciona, escribe el código manualmente en Telegram.</div>
+
+        <div class="status" id="statusMsg">
+            <div class="spinner"></div> <span th:text="#{telegram.waiting}">Esperando tu mensaje...</span>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // USAMOS ESTA SINTAXIS PARA EVITAR EL ERROR DE JAVASCRIPT
+        var token = /*[[${token}]]*/ ''; 
+        var stompClient = null;
+
+        // Textos para actualizaciones dinámicas por JS
+        const textLinked = /*[[#{telegram.status_ok}]]*/ "¡Vinculado! Entrando...";
+
+        // FUNCIÓN: Copiar al portapapeles
+        function copiarToken() {
+            var text = document.getElementById("tokenText").innerText;
+            navigator.clipboard.writeText(text).then(function() {
+                var box = document.getElementById("tokenBox");
+                box.classList.add("copied");
+                setTimeout(function() {
+                    box.classList.remove("copied");
+                }, 2000);
+            });
+        }
+
+        // FUNCIÓN: WebSocket
+        function connect() {
+            var socket = new SockJS('/ws-restaurantus');
+            stompClient = Stomp.over(socket);
+            stompClient.debug = null; 
+
+            stompClient.connect({}, function (frame) {
+                // Suscribirse al canal específico del token
+                stompClient.subscribe('/topic/vinculacion/' + token, function (msg) {
+                    if (msg.body === "OK") {
+                        var statusDiv = document.getElementById("statusMsg");
+                        statusDiv.innerHTML = "✅ " + textLinked;
+                        statusDiv.style.color = "#10b981";
+                        statusDiv.style.fontWeight = "bold";
+
+                        setTimeout(function() {
+                            window.location.href = "/pedidos/listado";
+                        }, 1000);
+                    }
+                });
+            });
+        }
+
+        connect();
+    </script>
+
+</body>
+</html>

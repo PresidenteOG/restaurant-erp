@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{customer.list.title_page}">Gestión de Clientes - Restaurantus</title>
+    <link rel="stylesheet" href="/css/user_and_roles_lists.css">
+    <link rel="icon" href="/images/favicon.png">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+</head>
+
+<body>
+    <div th:replace="~{/page_dashboard/dashboard :: sidebar(activePage='customers')}"></div>
+    <div class="admin-container">
+        <main class="main-content with-dashboard">
+
+            <div class="panel-header"
+                style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>
+                        <i class="bi bi-people-fill" style="color: #2ecc71; margin-right: 12px;"></i>
+                        <span th:text="#{customer.list.h1}">Gestión de Clientes</span>
+                    </h1>
+                    <p th:text="#{customer.list.subtitle}">Visualiza y administra la información de tus clientes
+                        registrados.</p>
+                </div>
+                <div>
+
+                    <a th:href="@{/clientes/nuevo}" class="btn-action btn-primary"
+                        sec:authorize="hasAnyRole('GESTOR_CLIENTES', 'ADMIN', 'GERENTE')"
+                        style="text-decoration:none; display: inline-block; width: auto; padding: 10px 25px; background-color: #2ecc71; border: none; border-radius: 8px; font-weight: 600; color: white;">
+                        <i class="bi bi-person-plus-fill"></i>
+                        <span th:text="#{customer.list.btn_new}">Nuevo Cliente</span>
+                    </a>
+                </div>
+            </div>
+
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show msg-alert" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <span th:text="${success}"></span>               
+            </div>
+
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show msg-alert" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <span th:text="${error}"></span>
+            </div>
+
+            <div
+                style="background-color: white; padding: 25px; border-radius: 12px; margin-top: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                <table id="tablaClientes" class="data-table">
+                    <thead>
+                        <tr>
+                            <th th:text="#{crudCommons.id}">ID</th>
+                            <th th:text="#{customer.list.th_registerDate}">Registro</th>
+                            <th th:text="#{crudCommons.name}">Nombre</th>
+                            <th th:text="#{customer.form.phone}">Teléfono</th>
+                            <th th:text="#{manageUsers.email}">Email</th>
+                            <th th:text="#{customer.list.th_notes}">Notas</th>
+                            <th th:text="#{crudCommons.actions}" class="text-center no-sort"
+                                sec:authorize="hasAnyRole('GESTOR_CLIENTES', 'ADMIN', 'GERENTE')">Acciones</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th><input type="text" th:placeholder="#{customer.list.searchByID}"></th>
+                            <th><input type="text" th:placeholder="#{customer.list.searchByDate}"></th>
+                            <th><input type="text" th:placeholder="#{customer.list.searchByName}"></th>
+                            <th><input type="text" th:placeholder="#{customer.list.searchByPhone}"></th>
+                            <th><input type="text" th:placeholder="#{customer.list.searchByEmail}"></th>
+                            <th><input type="text" th:placeholder="#{customer.list.searchByNotes}"></th>
+                            <th sec:authorize="hasAnyRole('GESTOR_CLIENTES', 'ADMIN', 'GERENTE')"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="cliente : ${clientes}">
+                            <td style="font-weight: bold;">#<span th:text="${cliente.idClienteLog}"></span></td>
+
+                            <td th:text="${#temporals.format(cliente.fechaRegistro, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td th:text="${cliente.nombreCliente}" style="font-weight: bold;"></td>
+                            <td>
+                                <i class="bi bi-telephone text-muted me-1"></i>
+                                <span
+                                    th:text="${cliente.telefono != null and cliente.telefono != '' ? cliente.telefono : #messages.msg('reserva.list.noPhone')}"></span>
+                            </td>
+                            <td th:text="${cliente.email ?: '---'}"></td>
+                            <td th:text="${cliente.notasCliente ?: '---'}"></td>
+                            <td class="text-center" sec:authorize="hasAnyRole('GESTOR_CLIENTES', 'ADMIN', 'GERENTE')">
+                                <div style="display: flex; gap: 15px; justify-content: center; align-items: center;">
+                                    <a th:href="@{/clientes/editar/{id}(id=${cliente.idClienteLog})}"
+                                        style="color: #2ecc71; font-size: 1.1rem; text-decoration: none;"
+                                        th:title="#{crudCommons.edit}">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <a href="#" class="delete-link"
+                                        style="color: #ef4444; font-size: 1.1rem; text-decoration: none;"
+                                        th:title="#{crudCommons.delete}"
+                                        th:onclick="'setDeleteId(' + ${cliente.idClienteLog} + ')'"
+                                        data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <form th:action="@{/clientes/eliminar/0}" method="post" id="deleteForm">
+                    <div class="modal-body p-4 text-center">
+                        <div class="text-danger mb-3"><i class="bi bi-exclamation-octagon" style="font-size: 3rem;"></i>
+                        </div>
+                        <h4 style="font-weight: 700;" th:text="#{customer.list.modal_delete_title}">¿Eliminar cliente?
+                        </h4>
+                        <p class="text-muted">
+                            <span th:text="#{customer.list.modal_delete_text}">Estás a punto de borrar al cliente</span>
+                            <strong>#<span id="displayId"></span></strong>.
+                        </p>
+
+
+                        <p class="text-danger small">
+                            <strong th:text="#{crudCommons.warning} + ':'">Aviso:</strong>
+                            <span th:text="#{customer.list.modal_delete_warn}">Si el cliente tiene reservas activas,
+                                estas se eliminarán automáticamente junto con su perfil.
+                        </p>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="button" class="btn-cancel" data-bs-dismiss="modal"
+                                style="flex: 1; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; font-weight: 600;"
+                                th:text="#{mesa.list.modal_delete_btn_cancel}">Cancelar
+                            </button>
+                            <button type="submit" class="btn-primary"
+                                style="flex: 1; padding: 12px; border: none; border-radius: 10px; background-color: #ef6a6c; color: white; font-weight: 600;"
+                                th:text="#{mesa.list.modal_delete_btn_confirm}">Confirmar Borrado
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        function setDeleteId(id) {
+            document.getElementById('displayId').textContent = id;
+            document.getElementById('deleteForm').action = '/clientes/eliminar/' + id;
+        }
+
+        window.datatableTranslations = {
+            search: "",
+            searchPlaceholder: /*[[#{crudCommons.search}]]*/ "Buscar",
+            lengthMenu: /*[[#{crudCommons.lengthMenu}]]*/ "Mostrar _MENU_ registros",
+            infoFiltered: "",
+            info: /*[[#{crudCommons.info}]]*/ "Mostrando _START_ a _END_ de <b>_TOTAL_</b> registros",
+            infoEmpty: /*[[#{crudCommons.infoEmpty}]]*/ "Mostrando 0 a 0 de 0 registros",
+            paginate: {
+                next: /*[[#{crudCommons.next}]]*/ "Siguiente",
+                previous: /*[[#{crudCommons.previous}]]*/ "Anterior",
+                first: /*[[#{crudCommons.first}]]*/ "Primero",
+                last: /*[[#{crudCommons.last}]]*/ "Último"
+            }
+        };
+
+        // Auto-dismiss alerts
+        window.onload = function () {
+            const alerts = document.querySelectorAll('.msg-alert');
+            alerts.forEach(alertElement => {
+                setTimeout(() => {
+                    alertElement.style.transition = "opacity 0.4s ease";
+                    alertElement.style.opacity = "0";
+                    setTimeout(() => alertElement.remove(), 600);
+                }, 5000);
+            });
+        };
+    </script>
+</body>
+
+</html>

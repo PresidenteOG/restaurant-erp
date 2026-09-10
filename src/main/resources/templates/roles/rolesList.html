@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{manageRoles.subtitle}">Manage Roles - Restaurantus</title>
+    <link rel="icon" href="/images/favicon.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/user_and_roles_lists.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <style>
+        .data-table th {
+            padding-right: 50px;
+            padding-left: 50px;
+        }
+
+        .data-table td {
+            padding-right: 50px;
+            padding-left: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{/page_dashboard/dashboard :: sidebar(activePage='rolesAndUsers')}"></div>
+
+    <div class="admin-container">
+        <main class="main-content with-dashboard">
+            <div class="panel-header">
+                <h1 th:text="#{manageRoles.title}">Gestión de roles</h1>
+                <p th:text="#{manageRoles.subtitle}">Visualiza los roles internos y modifica los roles de etiquetación.</p>
+            </div>
+
+            <div class="nav-tabs" style="--bs-nav-tabs-border-color: #ffffff00;">
+                <a th:text="#{manageUsers.tab_users}" th:href="@{/users/}" class="tab-btn">Usuarios</a>
+                <a th:text="#{manageUsers.tab_roles}" class="tab-btn active">Roles</a>
+                <a th:text="#{manageUsers.tab_logins}" th:href="@{/loginAttempts}" class="tab-btn">Intentos de Login</a>
+            </div>
+
+            <div class="filter-bar">
+                <form th:action="@{/roles}" method="get" class="filter-form">
+                    <div class="filters-left">
+                        <div class="search-input-wrapper">
+                            <input type="text" name="rolename" th:value="${param.rolename}" 
+                                th:placeholder="#{crudCommons.searchByName}" class="input-search">
+                        </div>
+                        <div class="filter-group status-filters">
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="showActive" value="true" 
+                                    th:checked="${activeChecked}">
+                                <span class="checkmark" th:text="#{manageRoles.show_active}">Activos</span>
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="showInactive" value="true" 
+                                    th:checked="${inactiveChecked}">
+                                <span class="checkmark" th:text="#{manageRoles.show_inactive}">Inactivos</span>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn-filter" th:text="#{manageRoles.applyFilters}">Aplicar Filtros</button>
+                        <a th:href="@{/roles}" class="btn-clear" th:text="#{manageRoles.clean}">Limpiar</a>
+                    </div>
+                    <div class="filters-right">
+                        <a th:href="@{/roles/createRole}" class="btn-register">
+                            <span class="icon">+</span> <text th:text="#{manageRoles.addRole}">Añadir Nuevo Rol</text>
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th th:text="#{crudCommons.name}">Nombre</th>
+                        <th th:text="#{manageRoles.type}">Tipo</th>
+                        <th th:text="#{crudCommons.status}">Estado</th>
+                        <th th:text="#{crudCommons.actions}">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="role : ${roles}"> <!--class="row-active"-->
+                        <td th:text="${role.name}"></td>
+                        <td>
+                            <span th:class="${role.isInternal} ? 'status-pill roletype-internal' : 'status-pill roletype-tag'"
+                            th:text="${role.isInternal} ? #{userUpdate.role_internal} :  #{userUpdate.role_tag}">Tipo</span>
+                        </td>
+                        <td>
+                            <span th:class="${role.isActive} ? 'status-pill status-active' : 'status-pill status-inactive'"
+                            th:text="${role.isActive} ? #{crudCommons.status_enabled} : #{crudCommons.status_disabled}">Status</span>
+                        </td>
+                        <td th:if="!${role.isInternal}">
+                            <a th:href="@{'/roles/rename-' + ${role.id}}" style="margin-right: 20px; color: #3b82f6;"
+                                class="edit-link" th:text="#{manageRoles.rename}">Rename</a>
+                            <a th:href="${role.isActive} ? @{'/roles/disable-' + ${role.id}} : @{'/roles/enableRole-' + ${role.id}}"
+                            th:class="${role.isActive} ? delete-link : edit-link"
+                            th:text="${role.isActive} ? #{manageRoles.disable} : #{manageRoles.enable}"></a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </main>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="#{usuarios.alta.title_page}">Alta Usuario - Restaurantus</title>
+    <link rel="icon" href="/images/favicon.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 50px auto;
+            background-color: #ffffff;
+            padding: 30px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            color: #333;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #28a745;
+        }
+
+        label {
+            display: block;
+            margin-top: 12px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        select {
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        button {
+            margin-top: 25px;
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #28a745;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .info-box {
+            background-color: #e9f7ef;
+            border-left: 4px solid #28a745;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info-box p {
+            margin: 5px 0;
+            color: #155724;
+        }
+
+        .alert-error {
+            background-color: #fee2e2;
+            color: #dc2626;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            border: 1px solid #fecaca;
+        }
+
+
+
+        /* Contenedor que envuelve la foto y el botón */
+        .upload-container-flex {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+            width: 100%;
+            /* Asegura que use todo el ancho del formulario */
+        }
+
+        /* El div que contiene el botón ahora se expande */
+        .button-expanding-wrapper {
+            flex-grow: 1;
+        }
+
+        /* El botón (label) ahora ocupa todo el espacio disponible */
+        .btn-seleccionar {
+            cursor: pointer;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 4px;
+            font-size: 13px;
+            display: block;
+            /* Cambiado de inline-block a block */
+            text-align: center;
+            /* Centra el texto en el botón largo */
+            width: 100%;
+            /* Ocupa todo el ancho de su padre */
+            box-sizing: border-box;
+        }
+
+        .btn-seleccionar:hover {
+            background-color: #218838;
+        }
+
+        /* Mantenemos tu avatar-wrapper igual pero aseguramos el tamaño */
+        .avatar-wrapper {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            overflow: hidden;
+            flex-shrink: 0;
+            border-radius: 12px;
+            border: 1px solid #28a745;
+        }
+
+        .avatar-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2 th:text="#{usuarios.alta.title}">Registro de Usuario</h2>
+
+        <div th:if="${error}" class="alert-error">
+            <span class="icon">⚠️</span>
+            <span th:text="${error}">Mensaje de error</span>
+        </div>
+
+        <!-- <div class="info-box">
+            <p><strong>Tipos de usuario:</strong></p>
+            <p>• <strong>Cliente:</strong> Puede hacer reservas</p>
+            <p>• <strong>Camarero:</strong> Puede tomar pedidos</p>
+            <p>• <strong>Administrador:</strong> Acceso completo al sistema</p>
+        </div> -->
+
+        <form th:object="${user}" th:action="@{/users/register-new}" method="post" enctype="multipart/form-data">
+
+            <!-- Información básica del usuario -->
+            <h3 th:text="#{usuarios.alta.info_basica}">Información Básica</h3>
+            <input type="hidden" name="id" th:field="*{id}" />
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="username">
+                        <span th:text="#{usuarios.alta.nombre}">Nombre de usuario</span>
+                        <span style="color: rgb(230, 0, 0)"> *</span>
+                    </label>
+                    <input type="text" id="username" th:field="*{username}" placeholder="Ej: marta_cocina" required>
+                    <div class="error-message" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="email">
+                        <span th:text="#{customer.form.email}">Email</span>
+                        <span style="color: rgb(230, 0, 0)"> *</span>
+                    </label>
+                    <input type="email" id="email" th:field="*{email}" placeholder="ejemplo@email.com" required>
+                    <div class="error-message" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="phoneNumber">
+                        <span th:text="#{customer.form.phone}">Teléfono</span>
+                        <span style="color: rgb(230, 0, 0)"> *</span>
+                    </label>
+                    <input type="tel" id="phoneNumber" th:field="*{phoneNumber}" placeholder="666777888" required>
+                    <div class="error-message" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password">
+                        <span th:text="#{usuarios.alta.password}">Contraseña</span>
+                        <span style="color: rgb(230, 0, 0)"> *</span>
+                    </label>
+                    <input type="password" id="password" th:field="*{password}" name="password" required>
+                    <div class="error-message" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">
+                        <span th:text="#{usuarios.alta.confirm_password}">Confirmar contraseña</span>
+                        <span style="color: rgb(230, 0, 0)"> *</span>
+                    </label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label th:text="#{usuarios.alta.foto}">Foto de Perfil</label>
+                    <div class="upload-container-flex">
+
+                        <div class="avatar-wrapper">
+                            <img id="imgPreview" th:src="@{/images/profiles/default-profile.png}" alt="Preview">
+                        </div>
+
+                        <div class="button-expanding-wrapper">
+                            <label th:text="#{usuarios.alta.seleccionar_imagen}"
+                            for="fotoFile" class="btn-seleccionar">Seleccionar imagen</label>
+                            <input type="file" id="fotoFile" name="fotoFile" accept="image/*" style="display: none;">
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div style="background-color: #eef2ff; border-left: 4px solid #4f46e5; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                <h4 style="margin-top: 0; color: #4338ca;" th:text="#{usuarios.alta.roles_info_title}"></h4>
+                <p style="margin-bottom: 0; font-size: 0.9rem; color: #3730a3;" th:text="#{usuarios.alta.roles_info_text}"></p>
+            </div>
+
+            <button type="submit" th:text="#{usuarios.alta.btn_submit}">Registrar Usuario</button>
+        </form>
+
+        <a th:href="@{/users/}" class="back-link" th:text="#{usuarios.alta.back_link}">Volver a la lista de usuarios</a>
+    </div>
+
+    <script>
+        // Validar que las contraseñas coincidan
+        document.querySelector('form').addEventListener('submit', function (event) {
+            const errorMatch = /*[[#{usuarios.alta.js_error_match}]]*/ 'Las contraseñas no coinciden';
+            const errorChars = /*[[#{usuarios.alta.js_error_length}]]*/ 'La contraseña debe tener al menos 6 caracteres';
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                alert(errorMatch);
+                event.preventDefault();
+                return false;
+            }
+
+            if (password.length < 6) {
+                alert(errorChars);
+                event.preventDefault();
+                return false;
+            }
+
+            return true;
+        });
+
+
+        document.getElementById('fotoFile').addEventListener('change', function (event) {
+            const reader = new FileReader();
+            reader.onload = function () {
+                const output = document.getElementById('imgPreview');
+                output.src = reader.result;
+            };
+            if (event.target.files[0]) {
+                reader.readAsDataURL(event.target.files[0]);
+            }
+        });
+    </script>
+</body>
+
+</html>

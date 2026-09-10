@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{reserva.edit.title_page}">Editar Reserva - Restaurantus</title>
+    <link rel="icon" href="/images/favicon.png"> 
+    <style>
+        .form-label-custom {
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div th:replace="~{page_dashboard/dashboard :: sidebar(activePage='reservations')}"></div>
+
+    <div class="admin-container">
+        <main class="main-content with-dashboard">
+            <div th:if="${success}" class="alert alert-success border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <span th:text="${success}"></span>
+            </div>
+
+            <div id="errorContainer"
+                th:class="${error == null ? 'alert alert-danger alert-dismissible fade show shadow-sm d-none' : 'alert alert-danger alert-dismissible fade show shadow-sm'}"
+                role="alert">
+                <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                <span id="errorSpan" th:text="${error}"></span>
+            </div>
+
+            <div class="container-fluid">
+                <div class="panel-header d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <h1>
+                            <i class="bi bi-pencil-square text-warning me-2"></i>
+                            <span th:text="#{reserva.edit.h2}">Editar Reserva</span>
+                        </h1>
+                        <p th:text="#{reserva.edit.subtitle} + ' #' + ${reserva.idReserva}"></p>
+                    </div>
+                    <a th:href="@{/reservas/listar}" class="tab-btn">
+                        <i class="bi bi-arrow-left"></i>
+                        <span th:text="#{reserva.edit.back}">Volver al listado</span>
+                    </a>
+                </div>
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <form th:action="@{/reservas/actualizar}" th:object="${reserva}" method="post">
+
+                            <input type="hidden" th:field="*{idReserva}" />
+
+                            <div class="row g-5">
+                                <div class="col-md-6 border-end">
+                                    <h2 class="section-header mb-4" th:text="#{reserva.edit.client_info}">Información del Cliente</h2>
+
+                                    <div class="detail-group">
+                                        <span class="detail-label" th:text="#{reserva.edit.client_name}">Nombre del Cliente</span>
+                                        <input type="text" class="form-control"
+                                            th:value="${reserva.clienteLog != null ? reserva.clienteLog.nombreCliente : #messages.msg('reserva.edit.no_customer')}"
+                                            disabled>
+                                    </div>
+
+                                    <div class="detail-group">
+                                        <span class="detail-label" th:text="#{reserva.edit.client_email}">Email</span>
+                                        <input type="email" class="form-control"
+                                            th:value="${reserva.clienteLog != null ? reserva.clienteLog.email : 'N/A'}"
+                                            disabled>
+                                    </div>
+
+                                    <div class="mt-4 p-3 bg-light rounded-3">
+                                        <p class="small text-muted mb-0">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            <span th:text="#{reserva.edit.cant_modify_customer}">Por seguridad, el cliente titular no puede ser modificado una vez creada la reserva.</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <h2 class="section-header mb-4" th:text="#{reserva.edit.modify_details}">Modificar Detalles</h2>
+
+                                    <div class="form-group">
+                                        <label class="form-label-custom" th:text="#{reserva.edit.date_time}">Fecha y Hora</label>
+                                        <input type="datetime-local" id="fechaHora" name="fechaHora"
+                                            th:value="${#temporals.format(reserva.fechaHora, 'yyyy-MM-dd''T''HH:mm')}" required>
+                                        <div class="d-flex justify-content-between">
+                                            <small class="text-muted">
+                                                <i class="bi bi-clock"></i>
+                                                <span th:text="#{reserva.edit.schelude} + ': ' + ${openTime} + ':00 H - ' + ${closeTime} + ':00 H'"></span>
+                                            </small>
+                                            <span id="horaError" class="text-danger small fw-bold" style="display: none;"
+                                            th:text="#{reserva.edit.bad_schelude}">Hora no permitida</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label-custom" th:text="#{reserva.edit.set_table}">Asignación de Mesa</label>
+                                        <select class="form-select"
+                                            style="padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; background-color: #f8fafc;"
+                                            th:field="*{mesa.idMesa}">
+                                            <option th:each="m : ${mesas}" th:if="${m.estado != 'out_of_service'}" th:value="${m.idMesa}"
+                                                th:text="#{reserva.edit.table_prefix} + ' ' + ${m.numMesa} + ' (Cap: ' + ${m.capacidad} + ' - ' + ${m.ubicacion} + ')'">
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label-custom" th:text="#{reserva.edit.set_guests}">Número de Comensales</label>
+                                        <input type="number" th:field="*{numComensales}" min="1" required>
+                                    </div>
+
+                                    <div class="status-pill status-active d-inline-block mt-2">
+                                        <i class="bi bi-shield-check"></i>
+                                        <span th:text="#{reserva.edit.active_validation}">Validación de capacidad automática activa</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-end mt-5 pt-3 border-top">
+                                <button type="submit" class="btn btn-success rounded-pill px-5 py-2 shadow">
+                                    <i class="bi bi-arrow-repeat me-2"></i> <span th:text="#{reserva.edit.update_btn}">Actualizar Reserva</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+ 
+    <script th:inline="javascript">
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // 1. Declarar las variables (esto faltaba)
+            const fechaInput = document.getElementById('fechaHora');
+
+
+            fechaInput.addEventListener('blur', function () {
+                if (!this.value) return;
+
+                const fechaSeleccionada = new Date(this.value);
+                const ahora = new Date();
+
+                // Resetear segundos y milisegundos para una comparación justa
+                ahora.setSeconds(0, 0);
+
+                const hora = fechaSeleccionada.getHours();
+                const minutos = fechaSeleccionada.getMinutes();
+
+                const container = document.getElementById('errorContainer');
+                const span = document.getElementById('errorSpan');
+
+                // 1. Validar si la fecha es anterior a "ahora"
+                const esFechaPasada = fechaSeleccionada < ahora;
+
+                const horaApertura = /*[[${openTime}]]*/ 12;
+                const horaCierre = /*[[${closeTime}]]*/ 23;
+
+                // 2. Validar Rango de Horas (12:00 PM a 11:00 PM)
+                const horaInvalida = (hora < horaApertura || hora >= horaCierre);
+
+                // 3. Validar Intervalos de 15 minutos
+                const minutosInvalidos = (minutos % 15 !== 0);
+
+                if (esFechaPasada || horaInvalida || minutosInvalidos) {
+                    // Prioridad de mensajes de error
+                    if (esFechaPasada) {
+                        span.innerText = /*[[#{reserva.edit.error_past_time}]]*/ "No se pueden realizar reservas para fechas o horas pasadas.";
+                        this.value = ""; // Borrar la fecha escrita, solo en este caso
+                    } else if (horaInvalida) {
+                        span.innerText = /*[[#{reserva.edit.error_out_time(${openTime}, ${closeTime})}]]*/ "El restaurante solo acepta reservas entre las " + horaApertura + ":00 H y las " + horaCierre + ":00 H.";
+                    } else {
+                        span.innerText = /*[[#{reserva.edit.error_interval}]]*/ "Por favor, elija un intervalo de 15 minutos (:00, :15, :30 o :45).";
+                    }
+
+                    // Mostrar el error usando tu contenedor th:text="${error}"
+                    container.classList.remove('d-none');
+                    container.style.display = 'block';
+
+                    this.focus();
+                } else {
+                    container.classList.add('d-none');
+                    container.style.display = 'none';
+                    checkFormValidity();
+                }
+            });
+        });
+
+
+    </script>
+</body>
+
+</html>

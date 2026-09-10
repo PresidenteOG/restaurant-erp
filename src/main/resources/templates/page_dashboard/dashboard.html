@@ -1,0 +1,672 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <body>
+        <div th:fragment="sidebar(activePage)" class="sidebar">
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+            <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"/>
+            <link rel="stylesheet" th:href="@{/css/user-profile-card.css}" />
+            <link rel="stylesheet" th:href="@{/css/styles.css}" />
+            <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+            <link rel="stylesheet" th:href="@{/css/paginacion.css}" />
+            <style>
+                /* --- SIDEBAR STYLES --- */
+                .sidebar-quick-actions {
+                    margin-top: auto;
+                    padding: 10px 0;
+                    border-top: 1px solid #f1f5f9;
+                    display: flex;
+                    gap: 10px;
+                    justify-content: center;
+                }
+
+                .btn-quick {
+                    border: none;
+                    border-radius: 12px;
+                    width: 100%;
+                    padding: 10px;
+                    font-size: 0.9rem;
+                    font-weight: 700;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    cursor: pointer;
+                    transition: transform 0.2s;
+                    position: relative;
+                }
+
+                .btn-quick:hover {
+                    transform: translateY(-2px);
+                }
+
+                .btn-quick-report {
+                    background: #fee2e2;
+                    color: #dc2626;
+                }
+
+                .btn-quick-notif {
+                    background: #e0f2fe;
+                    color: #0284c7;
+                }
+
+                .notif-badge-count {
+                    position: absolute;
+                    top: -5px;
+                    right: -5px;
+                    background: #ef4444;
+                    color: white;
+                    font-size: 0.7rem;
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    display: none;
+                    align-items: center;
+                    justify-content: center;
+                    border: 2px solid white;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                }
+
+                .badge-pulse {
+                  animation: pulse-red 1.5s infinite;
+                }
+
+                @keyframes pulse-red {
+                    0% {
+                        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+                    }
+                    100% {
+                        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+                    }
+                }
+
+                .quick-notifs-panel {
+                    position: fixed;
+                    bottom: 90px;
+                    left: 270px;
+                    width: 320px;
+                    background: white;
+                    border-radius: 16px;
+                    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.25);
+                    border: 1px solid #e2e8f0;
+                    display: none;
+                    z-index: 9999999 !important;
+                    overflow: hidden;
+                    animation: slideRight 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+                }
+
+                @keyframes slideRight {
+                    from {
+                        opacity: 0;
+                        transform: translateX(-20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                }
+
+                .q-notif-header {
+                    background: #f8fafc;
+                    padding: 12px 15px;
+                    font-weight: 700;
+                    border-bottom: 1px solid #e2e8f0;
+                    color: #334155;
+                    display: flex;
+                    justify-content: space-between;
+                }
+
+                .q-notif-list {
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+                    max-height: 350px;
+                    overflow-y: auto;
+                }
+
+                .q-notif-item {
+                    padding: 12px 15px;
+                    border-bottom: 1px solid #f1f5f9;
+                    font-size: 0.85rem;
+                    color: #475569;
+                    transition: background 0.2s;
+                    cursor: pointer;
+                }
+
+                .q-notif-item:hover {
+                    background: #f1f5f9;
+                }
+
+                /* --- MANUAL TOAST (OPEN/CLOSE) --- */
+                #magicToast {
+                    position: fixed;
+                    top: -120px;
+                    /* HIDDEN STATE */
+                    left: 50%;
+                    transform: translateX(-50%);
+                    z-index: 2147483647 !important;
+                    width: 380px;
+                    background: white;
+                    border-radius: 50px;
+                    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+                    padding: 8px 10px;
+                    display: flex;
+                    align-items: center;
+                    border: 1px solid #f1f5f9;
+                    transition: top 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+                }
+
+                #magicToast.open {
+                    top: 30px;
+                }
+
+                /* VISIBLE STATE */
+                .mt-icon {
+                    width: 42px;
+                    height: 42px;
+                    background: #dc2626;
+                    color: white;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.2rem;
+                    margin-right: 12px;
+                    flex-shrink: 0;
+                }
+
+                .mt-content {
+                    flex: 1;
+                    overflow: hidden;
+                    padding-right: 5px;
+                }
+
+                .mt-title {
+                    display: block;
+                    font-weight: 800;
+                    font-size: 0.9rem;
+                    color: #1e293b;
+                    margin-bottom: 2px;
+                }
+
+                .mt-desc {
+                    display: block;
+                    font-size: 0.8rem;
+                    color: #64748b;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .mt-close {
+                    background: none;
+                    border: none;
+                    font-size: 1.4rem;
+                    color: #cbd5e1;
+                    cursor: pointer;
+                    padding: 0 10px;
+                    margin-left: 5px;
+                }
+
+                .mt-close:hover {
+                    color: #dc2626;
+                }
+
+                .ws-status-dot {
+                    display: inline-block;
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    margin-right: 5px;
+                }
+
+                .connected {
+                    background-color: #10b981;
+                    box-shadow: 0 0 5px #10b981;
+                }
+
+                .disconnected {
+                    background-color: #ef4444;
+                }
+            </style>
+            <div class="logo">
+                <a th:href="@{/home}" style=" display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit;">
+                <img th:src="@{/images/logo.png}" alt="logo" class="logo-img" />
+                <span>Restaurantus</span>
+                </a>
+            </div>
+            <ul class="menu" id="main-menu" style="flex-grow: 1; overflow-y: auto; margin-bottom: 0rem;">
+                <li th:classappend="${activePage == 'home'} ? 'active'">
+                    <a th:href="@{/home}">
+                    <span class="icon">🏠</span>
+                    <span th:text="#{menu.home}">Inicio</span>
+                    </a>
+                </li>
+                <li sec:authorize="hasAnyRole('ADMIN', 'GERENTE', 'GESTOR_MESAS', 'VISOR_MESAS')"
+                    th:classappend="${activePage == 'tables'} ? 'active'">
+                    <a th:href="@{/mesas/listar}">
+                    <span class="icon">🪑</span>
+                    <span th:text="#{menu.tables}">Mesas</span>
+                    </a>
+                </li>
+                <li sec:authorize="hasAnyRole('CAMARERO', 'CAJA', 'ADMIN', 'GERENTE')"
+                    th:classappend="${activePage == 'orders'} ? 'active'">
+                    <a th:href="@{/pedidos/listado}">
+                    <span class="icon">🛒</span>
+                    <span th:text="#{menu.orders}">Pedidos</span>
+                    </a>
+                </li>
+                <li sec:authorize="hasAnyRole('COCINERO', 'JEFE_COCINA', 'ADMIN', 'GERENTE')"
+                    th:classappend="${activePage == 'kitchen'} ? 'active'">
+                    <a th:href="@{/cocina/pendientes}">
+                    <span class="icon">🍳</span>
+                    <span th:text="#{menu.kitchen}">Cocina</span>
+                    </a>
+                </li>
+                <li sec:authorize="hasAnyRole('VISOR_CARTA', 'GESTOR_CARTA', 'ADMIN', 'GERENTE')"
+                    th:classappend="${activePage == 'menus'} ? 'active'">
+                    <a th:href="@{/carta}">
+                    <span class="icon">📋</span>
+                    <span th:text="#{menu.menus}">Carta</span>
+                    </a>
+                </li>
+                <li sec:authorize="hasAnyRole('VISOR_CLIENTES', 'GESTOR_CLIENTES', 'ADMIN', 'GERENTE')"
+                    th:classappend="${activePage == 'customers'} ? 'active'">
+                    <a th:href="@{/clientes/listar}">
+                    <span class="icon">👨🏻‍💼</span>
+                    <span th:text="#{menu.customers}">Clientes</span>
+                    </a>
+                </li>
+                <li sec:authorize="hasAnyRole('VISOR_CLIENTES', 'GESTOR_CLIENTES', 'ADMIN', 'GERENTE')"
+                    th:classappend="${activePage == 'reservations'} ? 'active'">
+                    <a th:href="@{/reservas/listar}">
+                    <span class="icon">📅</span>
+                    <span th:text="#{menu.bookings}">Reservas</span>
+                    </a>
+                </li>
+                <li sec:authorize="hasAnyRole('GESTOR_ALMACEN', 'VISOR_ALMACEN', 'ADMIN', 'GERENTE')"
+                    th:classappend="${activePage == 'inventory'} ? 'active'">
+                    <a th:href="@{/almacen/inventario}">
+                    <span class="icon">🏬</span>
+                    <span th:text="#{menu.inventory}">Inventario</span>
+                    </a>
+                </li>
+                <li sec:authorize="hasAnyRole('CAJA', 'FACTURISTA', 'ADMIN', 'GERENTE')"
+                    th:classappend="${activePage == 'invoices'} ? 'active'">
+                    <a th:href="@{/finanzas/pendientesCobro}">
+                    <span class="icon">🧾</span>
+                    <span th:text="#{menu.accounting}">Contabilidad</span>
+                    </a>
+                </li>
+                <li sec:authorize="hasAnyRole('ADMIN', 'GERENTE')"
+                    th:classappend="${activePage == 'rolesAndUsers'} ? 'active'">
+                    <a th:href="@{/users/}">
+                    <span class="icon">👥</span>
+                    <span th:text="#{menu.manage_users}">Usuarios y Roles</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-quick-actions">
+                <button class="btn-quick btn-quick-report" onclick="abrirModalReporteGlobal()" th:title="#{sidebar.create_issue}">
+                <i class="bi bi-megaphone-fill"></i>
+                <span th:text="#{sidebar.report}">Reportar</span>
+                </button>
+                <button class="btn-quick btn-quick-notif" onclick="toggleQuickNotifs()" th:title="#{sidebar.see_notifications}">
+                    <i class="bi bi-bell-fill"></i>
+                    <div id="quick-badge" class="notif-badge-count">0</div>
+                </button>
+            </div>
+            <div id="quickNotifsPanel" class="quick-notifs-panel">
+                <div class="q-notif-header">
+                    <span th:text="'🔔 ' + #{sidebar.alerts}">🔔 Alertas</span>
+                    <span style="cursor: pointer" onclick="toggleQuickNotifs()">✖</span>
+                </div>
+                <ul id="quickNotifsList" class="q-notif-list">
+                    <li style="padding: 20px; text-align: center; color: #94a3b8">
+                        <span th:text="#{sidebar.no_notifications}">Sin notificaciones</span>
+                    </li>
+                </ul>
+                <div style="padding: 10px; text-align: center; border-top: 1px solid #f1f5f9;">
+                    <a th:href="@{/incidencias}"
+                        style="font-size: 0.8rem; text-decoration: none; color: #2563eb; font-weight: bold;" th:text="#{sidebar.see_history}">Ver historial</a>
+                </div>
+            </div>
+            <div class="user-sidebar-footer">
+                <div class="user-profile-card" id="userCard">
+                    <div class="avatar-wrapper">
+                        <!-- <img th:src="@{/images/user-avatar.jpg}" alt="User" class="user-avatar">-->
+                        <img th:src="${currentUser != null && currentUser.foto != null} ? @{'/images/profiles/' + ${currentUser.foto}} : @{/images/profiles/default-profile.png}" alt="User Profile" class="user-avatar"/>
+                        <span id="status-dot"></span>
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name" style="text-transform: uppercase" th:text="${#authentication.name}">Usuario</span>
+                        <strong><span id="user-status" th:text="#{sidebar.online}">En línea</span></strong>
+                    </div>
+                    <div class="user-actions-icon">
+                        <form th:action="@{/logout}" method="post" style="margin: 0; display: flex">
+                            <button type="submit" class="direct-logout-btn" th:title="#{sidebar.log_out}">
+                                <i class="bi bi-box-arrow-right"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="globalModalReporte" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content modal-rounded shadow-lg border-0">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title fw-bold text-danger">
+                                <i class="bi bi-exclamation-octagon-fill"></i>
+                                <span th:text="#{sidebar.new_report}">Nuevo Reporte</span>
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form id="formReporteRapido" onsubmit="enviarReporteV3(event)">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small fw-bold" th:text="#{issue.create.set_title}">TÍTULO</label>
+                                    <input type="text" class="form-control bg-light" name="titulo" th:placeholder="#{issue.create.titel_placeholder}" required/>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small fw-bold" th:text="#{issue.create.set_desc}">DESCRIPCIÓN</label>
+                                    <textarea class="form-control bg-light" name="descripcion" rows="3" th:placeholder="#{issue.create.desc_placeholder}" required></textarea>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label class="form-label text-muted small fw-bold" th:text="#{issue.create.set_desc}">PRIORIDAD</label>
+                                        <select class="form-select" name="prioridad">
+                                            <option value="BAJA" th:text="#{issue.create.priority_low}">Baja</option>
+                                            <option value="MEDIA" th:text="#{issue.create.priority_medium}" selected>Media</option>
+                                            <option value="ALTA" th:text="#{issue.create.priority_high}">Alta 🚨</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="hidden" name="estado" value="ABIERTA" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0 pt-0">
+                                <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                                th:text="#{issue.create.cancel}">
+                                    Cancelar
+                                </button>
+                                <button type="submit" id="btnSubmitReporte" class="btn btn-danger px-4"
+                                style="border-radius: 50px" th:text="#{issue.create.send}">
+                                    Enviar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div id="magicToast">
+                <div class="mt-icon"><i class="bi bi-bell-fill"></i></div>
+                <div class="mt-content">
+                    <span id="mt-title" class="mt-title" th:text="#{magicToast.title}">Título</span>
+                    <span id="mt-desc" class="mt-desc" th:text="#{magicToast.desc}">Descripción...</span>
+                </div>
+                <button onclick="cerrarToast()" class="mt-close">×</button>
+            </div>
+            <audio id="audioGlobal" th:src="@{/sounds/alert.mp3}" preload="auto"></audio>
+            <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+            <script th:src="@{/js/datatables-config-paginacion.js}"></script>
+            <script th:inline="javascript">
+                /*<![CDATA[*/
+                // 1. DATOS DEL SERVIDOR (Ya vienen ordenados por ID Descendente)
+                var serverIncidencias = /*[[${ultimasIncidencias}]]*/ [];
+                /*]]>*/
+                
+                // Variables Globales
+                var historialAlertas = [];
+                var contadorNoLeidos = 0;
+                var dashboardStompClient = null;
+                var timerToast = null;
+                
+                // --- INICIALIZACIÓN ---
+                document.addEventListener("DOMContentLoaded", function () {
+                    // Mover elementos al body para evitar problemas visuales
+                    ["globalModalReporte", "magicToast", "quickNotifsPanel"].forEach(
+                        (id) => {
+                            var el = document.getElementById(id);
+                            if (el) document.body.appendChild(el);
+                        },
+                    );
+                    
+                    inicializarDatos(); // <--- Aquí calculamos lo que pides
+                    connectWS();
+                });
+                
+                // --- LÓGICA DE "NO LEÍDOS" (WATERMARK) ---
+                function inicializarDatos() {
+                    // A) Convertimos datos del server a formato visual
+                    historialAlertas = serverIncidencias.map((inc) => ({
+                        id: inc.id,
+                        titulo: inc.titulo,
+                        desc: inc.descripcion,
+                        hora: new Date(inc.fechaCreacion).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        }),
+                    }));
+                
+                    // B) Recuperamos la "Marca de agua" (El último ID que el usuario VIO al abrir el panel)
+                    var ultimoIdVisto =
+                        parseInt(localStorage.getItem("erp_last_seen_id")) || 0;
+                    
+                    // C) Calculamos cuántos hay en la lista que sean MAYORES al visto
+                    // Como la lista viene ordenada desc, contamos hasta que encontremos uno viejo
+                    contadorNoLeidos = 0;
+
+                    for (let item of historialAlertas) {
+                        if (item.id > ultimoIdVisto) {
+                            contadorNoLeidos++;
+                        }
+                    }
+                    
+                    // D) Renderizar
+                    actualizarBadgeVisual();
+                    renderizarLista();
+                }
+                
+                // --- AL ABRIR EL PANEL (MARCAR COMO LEÍDO) ---
+                function toggleQuickNotifs() {
+                    var panel = document.getElementById("quickNotifsPanel");
+                    
+                    if (panel.style.display === "block") {
+                        panel.style.display = "none";
+                    } else {
+                        panel.style.display = "block";
+                    
+                        // Si hay nuevos y abrimos el panel, actualizamos la marca de agua
+                        if (historialAlertas.length > 0) {
+                        var idMasNuevo = historialAlertas[0].id; // El primero es el más nuevo
+                        localStorage.setItem("erp_last_seen_id", idMasNuevo);
+                        }
+                    
+                        // Reset visual a 0
+                        contadorNoLeidos = 0;
+                        actualizarBadgeVisual();
+                    }
+                }
+                
+                // --- AL RECIBIR NOTIFICACIÓN EN VIVO ---
+                function procesarAlerta(data) {
+                    // 1. Toast
+                    abrirToast(data.titulo, data.descripcion);
+                    
+                    // 2. Añadir al historial en memoria
+                    var hora = new Date().toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    });
+                    var item = {
+                        id: data.id,
+                        titulo: data.titulo,
+                        desc: data.descripcion,
+                        hora: hora,
+                    };
+                    
+                    historialAlertas.unshift(item);
+                    if (historialAlertas.length > 5) historialAlertas.pop();
+                    
+                    // 3. Incrementar contador (Porque acaba de llegar y no hemos abierto el panel)
+                    contadorNoLeidos++;
+                    
+                    actualizarBadgeVisual();
+                    renderizarLista();
+                }
+                
+                // ---------------------------------------------------------
+                // --- RESTO DE FUNCIONES (WS, AJAX, UTILS) SIN CAMBIOS ---
+                // ---------------------------------------------------------
+                
+                function actualizarBadgeVisual() {
+                    var badge = document.getElementById("quick-badge");
+                    if (contadorNoLeidos > 0) {
+                        badge.innerText = contadorNoLeidos;
+                        badge.style.display = "flex";
+                        badge.classList.add("badge-pulse");
+                    } else {
+                        badge.style.display = "none";
+                        badge.classList.remove("badge-pulse");
+                    }
+                }
+                
+                function renderizarLista() {
+                    var ul = document.getElementById("quickNotifsList");
+                    ul.innerHTML = "";
+                    if (historialAlertas.length === 0) {
+                        ul.innerHTML =
+                        '<li class="q-notif-item" style="text-align: center; color: #94a3b8;">Sin notificaciones recientes</li>';
+                        return;
+                    }
+                    historialAlertas.forEach((notif) => {
+                        var li = document.createElement("li");
+                        li.className = "q-notif-item";
+                        li.onclick = function () {
+                            window.location.href = "/incidencias";
+                        };
+                    
+                        // Indicador visual de "Nuevo" en la lista si es mayor al visto
+                        var ultimoIdVisto =
+                        parseInt(localStorage.getItem("erp_last_seen_id")) || 0;
+                        var dot =
+                            notif.id > ultimoIdVisto
+                                ? '<span style="color:red; font-size:1.2em;">•</span> '
+                                : "";
+                    
+                        li.innerHTML = `<span class="q-notif-title">${dot}${notif.titulo} <span class="q-notif-time">${notif.hora}</span></span><div class="q-notif-desc">${notif.desc}</div>`;
+                        ul.appendChild(li);
+                    });
+                }
+                
+                // AJAX V3 (Igual que antes)
+                function enviarReporteV3(event) {
+                    event.preventDefault();
+                    var form = document.getElementById("formReporteRapido");
+                    var btn = document.getElementById("btnSubmitReporte");
+                    var formData = new FormData(form);
+                    var csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+                    var csrfHeader = document.querySelector(
+                        'meta[name="_csrf_header"]',
+                    )?.content;
+                    var headers = {};
+                    if (csrfToken && csrfHeader) headers[csrfHeader] = csrfToken;
+                    
+                    btn.disabled = true;
+                    btn.innerText = "Enviando...";
+                    
+                    fetch("/incidencias/api/guardar-v3", {
+                        method: "POST",
+                        headers: headers,
+                        body: formData,
+                    })
+                    .then((r) => {
+                        if (r.ok) {
+                            bootstrap.Modal.getInstance(
+                                document.getElementById("globalModalReporte"),
+                            ).hide();
+                            form.reset();
+                        } else {
+                            alert("Error: " + r.status);
+                        }
+                    })
+                    .catch((e) => alert("Error de conexión"))
+                    .finally(() => {
+                        btn.disabled = false;
+                        btn.innerText = "Enviar";
+                    });
+                }
+                
+                // WS Connection (Con filtro NUEVA)
+                function connectWS() {
+                    var socket = new SockJS("/ws-restaurantus");
+                    dashboardStompClient = Stomp.over(socket);
+                    dashboardStompClient.debug = null;
+                    
+                    dashboardStompClient.connect(
+                        {},
+                        function (frame) {
+                            updateStatus(true);
+                            dashboardStompClient.subscribe(
+                                "/topic/incidencias",
+                                function (msg) {
+                                    try {
+                                        var body = JSON.parse(msg.body);
+                                        if (body.accion === "NUEVA") {
+                                            procesarAlerta(body.datos);
+                                        }
+                                    } catch (e) {}
+                                },
+                            );
+                        },
+                        function (error) {
+                            updateStatus(false);
+                            setTimeout(connectWS, 5000);
+                        },
+                    );
+                }
+                
+                function abrirToast(t, d) {
+                    var toast = document.getElementById("magicToast");
+                    document.getElementById("mt-title").innerText = t;
+                    document.getElementById("mt-desc").innerText = d;
+                    var audio = document.getElementById("audioGlobal");
+                    if (audio) audio.play().catch((e) => {});
+                    toast.classList.add("open");
+                    if (timerToast) clearTimeout(timerToast);
+                    timerToast = setTimeout(() => {
+                        document.getElementById("magicToast").classList.remove("open");
+                    }, 5000);
+                }
+                function cerrarToast() {
+                    document.getElementById("magicToast").classList.remove("open");
+                }
+                function abrirModalReporteGlobal() {
+                    new bootstrap.Modal(
+                        document.getElementById("globalModalReporte"),
+                    ).show();
+                }
+
+                function updateStatus(isConnected) {
+                    const dot = document.getElementById("status-dot");
+                    const txt = document.getElementById("user-status");
+                    const onlineTxt = /*[[#{websocket.status.connected}]]*/ 'En línea';
+                    const offlineTxt = /*[[#{websocket.status.connecting}]]*/ 'Conectando';
+
+                    if (dot && txt) {
+                        dot.className = isConnected
+                            ? "dot-online"
+                            : "dot-connecting";
+                        txt.innerText = isConnected ? onlineTxt : offlineTxt;
+                        txt.style.color = isConnected ? "#4caf50" : "#d69a04";
+                    }
+                }
+            </script>
+        </div>
+    </body>
+</html>

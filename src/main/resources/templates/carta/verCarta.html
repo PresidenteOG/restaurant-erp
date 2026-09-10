@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{carta.ver.title_page}">Gestión de Carta - Restaurantus</title>
+    <link rel="icon" href="/images/favicon.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    
+    <style>
+        body { background-color: #f8f9fa !important; margin: 0; padding: 0; overflow-x: hidden; }
+        .admin-container { display: block !important; margin-left: 250px !important; width: calc(100% - 250px) !important; padding: 30px; box-sizing: border-box; min-height: 100vh; }
+        .main-content.with-dashboard { margin-left: 0 !important; padding: 0 !important; width: 100%; }
+        
+        .data-table th { background-color: #f8fafc; font-weight: 700; color: #475569; }
+        .status-pill { font-size: 0.75rem; font-weight: 600; padding: 4px 8px; border-radius: 6px; }
+        .status-active { background: #dcfce7; color: #16a34a; }
+    </style>
+</head>
+<body>
+    <div th:replace="~{/page_dashboard/dashboard :: sidebar(activePage='menus')}"></div>
+
+    <div class="admin-container">
+        <main class="main-content with-dashboard">
+            <div class="panel-header" style="height: auto; padding-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div>
+                        <h1 th:text="#{carta.ver.h1}">Gestión de la Carta</h1>
+                        <p th:text="#{carta.ver.subtitle}">Configura los platos individuales y los menús combinados disponibles.</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <label class="detail-label" th:text="#{carta.ver.selector_label}">Ver sección:</label>
+                    <select id="switchCarta" class="detail-value" style="width: 200px; background: #1e293b; color: white;">
+                        <option value="section-platos" th:text="'🍴 ' + #{pedido.form.cat_dishes}">🍴 Platos</option>
+                        <option value="section-bebidas" th:text="'🥤 ' + #{pedido.form.cat_drinks}">🥤 Bebidas</option>
+                        <option value="section-postres" th:text="'🍰 ' + #{pedido.form.cat_desserts}">🍰 Postres</option>
+                        <option value="section-menus" th:text="'🍱 ' + #{pedido.form.cat_menus}">🍱 Menús Combinados</option>
+                    </select>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <a th:href="@{/carta/plato/nuevo}" sec:authorize="hasAnyRole('GESTOR_CARTA', 'ADMIN', 'GERENTE')"
+                    class="tab-btn active" style="text-decoration:none" th:text="#{carta.ver.btn_new_dish}">+ Nuevo Producto</a>
+
+                    <a th:href="@{/carta/menu/nuevo}" sec:authorize="hasAnyRole('GESTOR_CARTA', 'ADMIN', 'GERENTE')"
+                     class="tab-btn active" style="text-decoration:none" th:text="#{carta.ver.btn_new_menu}">+ Nuevo Menú</a>
+                </div>
+            </div>
+
+            <div id="section-platos" class="carta-section">
+                <div th:each="subCat : ${T(cat.copernic.restaurantus_erp.domain.SubcategoriaPlato).values()}" 
+                    th:if="${subCat.categoriaPadre.name == 'PLATO'}">
+                    
+                    <h3 th:text="${subCat.nombreVisible}" style="margin: 20px 0; color: #10b981; border-left: 4px solid #2ecc71; padding-left: 6px;"></h3>
+                    
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                            <th style="width: 30%;" th:text="#{carta.ver.th_name}">Nombre</th>
+                            <th style="width: 10%;" th:text="#{carta.ver.th_price}">Precio</th>
+                            <th style="width: 30%;" th:text="#{carta.ver.th_ingredients}">Ingredientes</th>
+                            <th style="width: 15%;" th:text="#{carta.plato.label_time}">Tiempo prep.</th>
+                            <th sec:authorize="hasAnyRole('GESTOR_CARTA', 'ADMIN', 'GERENTE')"
+                            style="width: 15%;" th:text="#{crudCommons.actions}">Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p : ${platos}" 
+                                th:if="${p.subcategoria?.name() == subCat.name()}"
+                                th:style="${!p.isDisponiblePorFecha() || !p.isDisponiblePorStock()} ? 'background-color: rgba(239, 68, 68, 0.1); color: #ef4444;' : ''">
+                                
+                                <td style="vertical-align: middle;">
+                                    <div style="display: flex; align-items: center; gap: 15px;">
+                                        
+                                        <img th:src="@{/images/plato/{img}(img=${p.imgUrl != null && p.imgUrl != '' ? p.imgUrl : 'default.png'})}" th:alt="#{carta.plato.label_image}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #475569; flex-shrink: 0;" />
+
+                                        <div style="display: flex; flex-direction: column;">
+                                            
+                                            <span th:text="${p.nombre}" style="display: block; font-weight: bold; font-size: 1.1em;"></span>
+                                            
+                                            <small th:if="${p.especial}" style="display: block; margin-top: 2px; opacity: 0.8; color: #94a3b8;"
+                                                th:text="#{carta.ver.vigency(${#temporals.format(p.inicioVigencia, 'dd/MM/yyyy')}, ${#temporals.format(p.finalVigencia, 'dd/MM/yyyy')})}">
+                                            </small>
+
+                                            <strong th:if="${!p.isDisponiblePorFecha()}" 
+                                                    style="font-size: 0.75em; display: block; color: #f87171; margin-top: 2px;"
+                                                    th:text="'⚠️ ' + #{carta.warn.out_of_season}">
+                                                ⚠️ FUERA DE TEMPORADA
+                                            </strong>
+                                            <strong th:if="${!p.isDisponiblePorStock()}" 
+                                                    style="font-size: 0.75em; display: block; color: #f87171;"
+                                                    th:text="'⚠️ ' + #{carta.warn.no_stock}">
+                                                ⚠️ SIN STOCK DE INGREDIENTES
+                                            </strong>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span th:text="${p.precio} + '€'" style="font-weight: bold;"></span>
+                                    <br/>
+                                    <small sec:authorize="hasAnyRole('GESTOR_CARTA', 'ADMIN', 'GERENTE')" style="color: #64748b;" th:text="#{carta.ver.cost} + ': ' + ${#numbers.formatDecimal(p.getCosteProduccion(), 1, 2)} + '€'">
+                                    </small>
+                                </td>
+                                <td>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                                        <span class="status-pill status-active" 
+                                            th:each="pi : ${p.ingredientes}" 
+                                            th:text="${pi.ingrediente.nombre}"
+                                            style="white-space: nowrap;">
+                                        </span>
+                                    </div>
+                                </td>
+                                <td th:text="${p.tiempoPreparacion} + ' min'"></td>
+                                <td sec:authorize="hasAnyRole('GESTOR_CARTA', 'ADMIN', 'GERENTE')">
+                                    <a th:href="@{/carta/plato/editar/{id}(id=${p.id})}" class="edit-link" th:text="#{crudCommons.edit}">Editar</a>
+                                    <a th:href="@{/carta/plato/eliminar/{id}(id=${p.id})}" class="edit-link" style="color: #ef4444; margin-left: 10px;"
+                                    th:onclick="'return confirm(\'' + #{carta.ver.ask_delete_dish} + '\');'" th:text="#{crudCommons.delete}">Eliminar</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="section-bebidas" class="carta-section" style="display:none;">
+                <div th:each="subCat : ${T(cat.copernic.restaurantus_erp.domain.SubcategoriaPlato).values()}" 
+                    th:if="${subCat.categoriaPadre.name == 'BEBIDA'}">
+                    
+                    <h3 th:text="${subCat.nombreVisible}" style="margin: 20px 0; color: #10b981;"></h3>
+                    
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 30%;" th:text="#{carta.ver.th_name}">Nombre</th>
+                                <th style="width: 10%;" th:text="#{carta.ver.th_price}">Precio</th>
+                                <th style="width: 30%;" th:text="#{carta.ver.th_ingredients}">Ingredientes</th>
+                                <th style="width: 15%;" th:text="#{carta.plato.label_time}">Tiempo prep.</th>
+                                <th sec:authorize="hasAnyRole('GESTOR_CARTA', 'ADMIN', 'GERENTE')"
+                                style="width: 15%;" th:text="#{crudCommons.actions}">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p : ${platos}" 
+                                th:if="${p.subcategoria?.name() == subCat.name()}"
+                                th:style="${!p.isDisponiblePorFecha() || !p.isDisponiblePorStock()} ? 'background-color: rgba(239, 68, 68, 0.1); color: #ef4444;' : ''">
+                                
+                                <td>
+                                    <span th:text="${p.nombre}" style="display: block; font-weight: bold;"></span>
+                                    
+                                    <small th:if="${p.especial}" style="display: block; margin-top: 2px; opacity: 0.8;"
+                                        th:text="#{carta.ver.vigency(${#temporals.format(p.inicioVigencia, 'dd/MM/yyyy')}, ${#temporals.format(p.finalVigencia, 'dd/MM/yyyy')})}">
+                                    </small>
+
+                                    <strong th:if="${!p.isDisponiblePorFecha()}" style="font-size: 0.75em; display: block; color: #f87171;" th:text="#{carta.warn.out_of_season}">FUERA DE TEMPORADA</strong>
+                                    <strong th:if="${!p.isDisponiblePorStock()}" style="font-size: 0.75em; display: block; color: #f87171;" th:text="#{carta.warn.no_stock}">SIN STOCK DE INGREDIENTES</strong>
+                                </td>
+                                <td>
+                                    <span th:text="${p.precio} + '€'" style="font-weight: bold;"></span>
+                                    <br/>
+                                    <small sec:authorize="hasAnyRole('GESTOR_CARTA', 'ADMIN', 'GERENTE')"  style="color: #64748b;" th:text="#{carta.ver.cost} + ': ' + ${#numbers.formatDecimal(p.getCosteProduccion(), 1, 2)} + '€'">
+                                    </small>
+                                </td>
+                                <td>
+                                    <span class="status-pill status-active" th:each="pi : ${p.ingredientes}" 
+                                        th:text="${pi.ingrediente.nombre}"></span>
+                                </td>
+                                <td th:text="${p.tiempoPreparacion} + ' min'"></td>
+                                <td sec:authorize="hasAnyRole('GESTOR_CARTA', 'ADMIN', 'GERENTE')">
+                                    <a th:href="@{/carta/plato/editar/{id}(id=${p.id})}" class="edit-link" th:text="#{crudCommons.edit}">Editar</a>
+                                    <a th:href="@{/carta/plato/eliminar/{id}(id=${p.id})}" class="edit-link" style="color: #ef4444; margin-left: 10px;"
+                                    th:onclick="'return confirm(\'' + #{carta.ver.ask_delete_dish} + '\');'" th:text="#{crudCommons.delete}">Eliminar</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="section-postres" class="carta-section" style="display:none;">
+                <div th:each="subCat : ${T(cat.copernic.restaurantus_erp.domain.SubcategoriaPlato).values()}" 
+                    th:if="${subCat.categoriaPadre.name == 'POSTRE'}">
+                    
+                    <h3 th:text="${subCat.nombreVisible}" style="margin: 20px 0; color: #10b981;"></h3>
+                    
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 30%;" th:text="#{carta.ver.th_name}">Nombre</th>
+                                <th style="width: 10%;" th:text="#{carta.ver.th_price}">Precio</th>
+                                <th style="width: 30%;" th:text="#{carta.ver.th_ingredients}">Ingredientes</th>
+                                <th style="width: 15%;" th:text="#{carta.plato.label_time}">Tiempo prep.</th>
+                                <th sec:authorize="hasAnyRole('GESTOR_CARTA', 'ADMIN', 'GERENTE')"
+                                style="width: 15%;" th:text="#{crudCommons.actions}">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p : ${platos}" 
+                                th:if="${p.subcategoria?.name() == subCat.name()}"
+                                th:style="${!p.isDisponiblePorFecha() || !p.isDisponiblePorStock()} ? 'background-color: rgba(239, 68, 68, 0.1); color: #ef4444;' : ''">
+                                
+                                <td>
+                                    <span th:text="${p.nombre}" style="display: block; font-weight: bold;"></span>
+                                    
+                                    <small th:if="${p.especial}" style="display: block; margin-top: 2px; opacity: 0.8;"
+                                        th:text="#{carta.ver.vigency(${#temporals.format(p.inicioVigencia, 'dd/MM/yyyy')}, ${#temporals.format(p.finalVigencia, 'dd/MM/yyyy')})}">
+                                    </small>
+
+
+                                    <strong th:if="${!p.isDisponiblePorFecha()}" style="font-size: 0.75em; display: block; color: #f87171;" th:text="#{carta.warn.out_of_season}">FUERA DE TEMPORADA</strong>
+                                    <strong th:if="${!p.isDisponiblePorStock()}" style="font-size: 0.75em; display: block; color: #f87171;" th:text="#{carta.warn.no_stock}">SIN STOCK DE INGREDIENTES</strong>
+                                </td>
+                                <td>
+                                    <span th:text="${p.precio} + '€'" style="font-weight: bold;"></span>
+                                    <br/>
+                                    <small sec:authorize="hasAnyRole('GESTOR_CARTA', 'ADMIN', 'GERENTE')" style="color: #64748b;" th:text="#{carta.ver.cost} + ': ' + ${#numbers.formatDecimal(p.getCosteProduccion(), 1, 2)} + '€'"></small>
+                                </td>
+                                <td>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                                        <span class="status-pill status-active" style="background: #f1f5f9; color: #64748b; font-weight: normal;" 
+                                              th:each="pi : ${p.ingredientes}" th:text="${pi.ingrediente.nombre}"></span>
+                                    </div>
+                                </td>
+                                <td th:text="${p.tiempoPreparacion} + ' min'"></td>
+                                <td sec:authorize="hasAnyRole('GESTOR_CARTA', 'ADMIN', 'GERENTE')" style="text-align: center;">
+                                    <a th:href="@{/carta/plato/editar/{id}(id=${p.id})}" class="edit-link" th:text="#{crudCommons.edit}">Editar</a>
+                                    <a th:href="@{/carta/plato/eliminar/{id}(id=${p.id})}" class="edit-link" style="color: #ef4444; margin-left: 10px;" th:onclick="'return confirm(\'' + #{carta.ver.ask_delete} + '\');'" th:text="#{crudCommons.delete}">Eliminar</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="section-menus" class="carta-section" style="display:none;">
+                <h3 style="margin: 20px 0; color: #10b981;" th:text="#{carta.ver.combined_menus}">Menús Combinados</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th th:text="#{carta.ver.th_menu_name}">Nombre Menú</th>
+                            <th th:text="#{carta.ver.th_menu_price}">Precio Menú</th>
+                            <th th:text="#{carta.ver.th_dish_number}">Número de Platos</th> 
+                            <th sec:authorize="hasAnyRole('GESTOR_CARTA', 'ADMIN', 'GERENTE', 'VISOR_CARTA')"
+                            th:text="#{crudCommons.actions}">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="menu : ${menus}" 
+                            th:style="${!menu.isDisponibleCompleto()} ? 'background-color: rgba(239, 68, 68, 0.1);' : ''">
+                            
+                            <td>
+                                <span th:text="${menu.nombre}" style="font-weight: bold;"></span>
+                                <div th:if="${!menu.isDisponibleCompleto()}" style="color: #ef4444; font-size: 0.8em; font-weight: bold;"
+                                th:text="#{carta.warn.unavailable}">⚠️ NO DISPONIBLE (Revisar stock/fechas de platos)
+                                </div>
+                            </td>
+                            <td th:text="${menu.precio} + '€'"></td>
+                            <td>
+                                <div style="font-size: 0.9em;">
+                                    <span th:text="${#lists.size(menu.platos)} + ' productos'"></span>
+                                </div>
+                            </td>
+                            <td>
+                                <a sec:authorize="hasAnyRole('GESTOR_CARTA', 'ADMIN', 'GERENTE', 'VISOR_CARTA')" th:href="@{/carta/detalleMenu/{id}(id=${menu.id})}" class="edit-link" style="margin-right: 10px;" th:text="#{carta.ver.view_dishes}">Ver platos</a>
+                                <a sec:authorize="hasAnyRole('GESTOR_CARTA', 'ADMIN', 'GERENTE')" th:href="@{/carta/menu/editar/{id}(id=${menu.id})}" class="edit-link" th:text="#{crudCommons.edit}">Editar</a>
+                                <a sec:authorize="hasAnyRole('GESTOR_CARTA', 'ADMIN', 'GERENTE')" th:href="@{/carta/menu/eliminar/{id}(id=${menu.id})}" class="edit-link" style="color: #ef4444; margin-left: 10px;"
+                                th:onclick="'return confirm(\'' + #{carta.ver.ask_delete_menu} + '\');'" th:text="#{crudCommons.delete}">Eliminar</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+        $(document).ready(function() {
+            
+            // --- 1. PESTAÑAS (Persistencia local) ---
+            var selector = $("#switchCarta");
+            var ultimaSeleccion = localStorage.getItem("ultimaVistaCarta") || "section-platos";
+            
+            selector.val(ultimaSeleccion);
+            $(".carta-section").hide();
+            $("#" + ultimaSeleccion).show();
+
+            selector.on("change", function() {
+                var seleccion = $(this).val();
+                localStorage.setItem("ultimaVistaCarta", seleccion);
+                $(".carta-section").hide();
+                $("#" + seleccion).show();
+            });
+
+            // --- 2. WEBSOCKET GLOBAL (INTEGRADO) ---
+            
+            function subscribeToGlobal(client) {
+                if(!client || !client.connected) return;
+
+                // Suscripción a cambios en CARTA para autorecarga
+                client.subscribe('/topic/carta', function (message) {
+                    console.log("🔔 Cambio en carta detectado. Recargando...");
+                    // Recarga forzosa
+                    setTimeout(function() {
+                        window.location.reload(true); 
+                    }, 500);
+                });
+            }
+
+            // Escuchar evento del Sidebar
+            document.addEventListener('dashboard-ws-connected', function(e) {
+                subscribeToGlobal(e.detail);
+            });
+
+            // Si el sidebar ya estaba listo
+            if (window.dashboardStompClient && window.dashboardStompClient.connected) {
+                subscribeToGlobal(window.dashboardStompClient);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,390 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title th:text="#{cocina.title_page}">Cocina - Restaurantus</title>
+    <link rel="icon" href="/images/favicon.png" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/cocina.css" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
+    <style>
+      .chat-float-btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1000;
+      }
+      .chat-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background-color: #ef4444;
+        color: white;
+        border: 2px solid white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+        z-index: 1001;
+      }
+    </style>
+  </head>
+
+  <body>
+    <audio id="chatAudio" src="/sounds/chat.mp3" preload="auto"></audio>
+
+    <div
+      th:replace="~{/page_dashboard/dashboard :: sidebar(activePage='kitchen')}"
+    ></div>
+
+    <div class="admin-container">
+      <main class="main-content with-dashboard">
+        <div class="panel-header">
+          <h1 th:text="#{cocina.h1}">Comandas de Cocina</h1>
+          <p th:text="#{cocina.subtitle}" class="subtitle">
+            Gestión de platos y órdenes en tiempo real
+          </p>
+        </div>
+
+        <a
+          th:href="@{/pedidos/finalizados}"
+          sec:authorize="hasAnyRole('CAMARERO', 'CAJA', 'ADMIN', 'GERENTE')"
+          class="btn-ver-finalizados"
+          th:text="#{cocina.btn_finished}"
+          >Ver Pedidos Finalizados</a
+        >
+
+        <div style="margin-top: 30px">
+          <th:block
+            th:each="subCat : ${T(cat.copernic.restaurantus_erp.domain.SubcategoriaPlato).values()}"
+          >
+            <th:block th:if="${subCat.categoriaPadre.name() != 'BEBIDA'}">
+              <div class="partida-seccion">
+                <h2
+                  class="partida-title"
+                  th:text="${subCat.nombreVisible}"
+                ></h2>
+                <div class="platos-grid">
+                  <th:block th:each="pp : ${pedidos}">
+                    <div
+                      th:if="${pp.plato.subcategoria?.name() == subCat.name() && pp.estado != 'LISTO'}"
+                      class="ticket-paint"
+                    >
+                      <div class="ticket-info">
+                        <div class="info-grupo">
+                          <span
+                            class="mesa-id"
+                            th:text="#{reserva.edit.table_prefix} + ' ' + ${pp.pedido.mesa?.numMesa}"
+                            >Mesa 1</span
+                          >
+                        </div>
+                        <div class="plato-nombre" style="margin-top: 15px">
+                          <span
+                            th:text="${pp.cantidad} + ' x ' + ${pp.plato.nombre}"
+                          ></span>
+                          <span
+                            class="tiempo-prep"
+                            th:text="'🕒 ' + ${pp.plato.tiempoPreparacion} + ' min'"
+                            >🕒 25 min</span
+                          >
+                        </div>
+                        <div
+                          th:if="${pp.pedido.observaciones != null && !pp.pedido.observaciones.isEmpty()}"
+                          style="
+                            margin-top: 10px;
+                            padding: 6px;
+                            background: #fff1f2;
+                            border-radius: 8px;
+                            border: 1px solid #fecdd3;
+                          "
+                        >
+                          <div
+                            style="
+                              display: flex;
+                              align-items: center;
+                              gap: 4px;
+                              color: #e11d48;
+                              font-size: 0.7rem;
+                              font-weight: 800;
+                              margin-bottom: 2px;
+                            "
+                          >
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            NOTAS:
+                          </div>
+                          <p
+                            style="
+                              margin: 0;
+                              font-size: 0.85rem;
+                              color: #881337;
+                              font-weight: 600;
+                              line-height: 1.2;
+                            "
+                            th:text="${pp.pedido.observaciones}"
+                          ></p>
+                        </div>
+                      </div>
+                      <div class="ticket-btn">
+                        <a
+                          th:if="${pp.estado == 'PENDIENTE'}"
+                          th:href="@{/cocina/empezarPlato/{pId}/{id}(pId=${pp.pedido.id}, id=${pp.id})}"
+                          class="btn-prep btn-preparar"
+                          ><span th:text="'🔥 ' + #{cocina.prepare}"
+                            >🔥 PREPARAR</span
+                          ></a
+                        >
+                        <a
+                          th:if="${pp.estado == 'PREPARANDO'}"
+                          th:href="@{/cocina/platoListo/{pId}/{id}(pId=${pp.pedido.id}, id=${pp.id})}"
+                          class="btn-prep btn-listo"
+                          ><span th:text="'✅ ' + #{cocina.ready}"
+                            >✅ LISTO</span
+                          ></a
+                        >
+                      </div>
+                    </div>
+                  </th:block>
+                </div>
+              </div>
+            </th:block>
+          </th:block>
+        </div>
+      </main>
+    </div>
+
+    <div class="chat-float-btn" onclick="toggleChat()">
+      💬
+      <div id="chatBadge" class="chat-badge">0</div>
+    </div>
+
+    <div class="chat-window" id="chatWindow">
+      <div class="chat-header">
+        <span>Chat Cocina 🟠</span>
+        <span style="cursor: pointer" onclick="toggleChat()">✖</span>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="chat-system-msg">🔒 Historial Cifrado Cargado</div>
+      </div>
+      <div class="chat-input-area">
+        <input
+          type="text"
+          id="chatInput"
+          class="chat-input"
+          placeholder="Escribe a sala..."
+          onkeypress="if (event.key === 'Enter') sendChatMsg();"
+        />
+        <button onclick="sendChatMsg()" class="chat-send-btn">➤</button>
+      </div>
+    </div>
+
+    <script th:inline="javascript">
+      var usuarioActual = /*[[${#authentication.name}]]*/ "Cocina";
+      var stompClientChat = null;
+      var chatAbierto = false;
+      var notificaciones = 0;
+
+      // CLAVE ÚNICA PARA COCINA
+      const STORAGE_KEY = "cocina_last_read_v3";
+
+      // Recuperamos la última fecha leída
+      var stored = localStorage.getItem(STORAGE_KEY);
+      var lastReadDate = stored ? new Date(stored) : new Date(0); // Si no hay, fecha 0 (1970)
+
+      // Variable para rastrear la hora del mensaje más reciente del servidor
+      var latestServerDate = new Date(0);
+
+      function toggleChat() {
+        var w = document.getElementById("chatWindow");
+        if (chatAbierto) {
+          w.style.display = "none";
+          chatAbierto = false;
+        } else {
+          w.style.display = "flex";
+          chatAbierto = true;
+          scrollToBottom();
+          marcarTodoComoLeido();
+        }
+      }
+
+      function marcarTodoComoLeido() {
+        notificaciones = 0;
+        actualizarBadge();
+
+        // TRUCO: Usamos la hora del último mensaje del SERVIDOR, no la de tu PC
+        // Si el chat está vacío, usamos la hora actual como fallback
+        if (latestServerDate.getTime() > 0) {
+          lastReadDate = new Date(latestServerDate.getTime());
+        } else {
+          lastReadDate = new Date();
+        }
+
+        localStorage.setItem(STORAGE_KEY, lastReadDate.toISOString());
+        console.log("✅ Chat leído hasta:", lastReadDate);
+      }
+
+      function actualizarBadge() {
+        var badge = document.getElementById("chatBadge");
+        if (notificaciones > 0) {
+          badge.style.display = "flex";
+          badge.innerText = notificaciones > 9 ? "+9" : notificaciones;
+        } else {
+          badge.style.display = "none";
+        }
+      }
+
+      function playNotificationSound() {
+        var audio = document.getElementById("chatAudio");
+        if (audio) {
+          audio.play().catch((e) => console.log("Audio bloqueado:", e));
+        }
+      }
+
+      function scrollToBottom() {
+        var d = document.getElementById("chatMessages");
+        d.scrollTop = d.scrollHeight;
+      }
+
+      function conectarChat() {
+        var socket = new SockJS("/ws-restaurantus");
+        stompClientChat = Stomp.over(socket);
+        stompClientChat.debug = null;
+
+        stompClientChat.connect(
+          {},
+          function (frame) {
+            console.log("✅ Cocina conectada");
+
+            stompClientChat.subscribe("/topic/pedidos", function (msg) {
+              console.log("🔔 Pedido nuevo");
+              setTimeout(() => location.reload(), 500);
+            });
+
+            stompClientChat.subscribe("/topic/chat_general", function (msg) {
+              var m = JSON.parse(msg.body);
+              procesarMensaje(m, true); // true = es mensaje en vivo
+            });
+
+            // CARGAR HISTORIAL
+            fetch("/api/chat/historial")
+              .then((r) => r.json())
+              .then((data) => {
+                const box = document.getElementById("chatMessages");
+                box.innerHTML = "";
+                box.insertAdjacentHTML(
+                  "beforeend",
+                  '<div class="chat-system-msg">🔒 Historial Cargado</div>',
+                );
+
+                notificaciones = 0;
+
+                data.forEach((m) => {
+                  procesarMensaje(m, false); // false = es historial
+                });
+
+                // Actualizar badge tras procesar todo el historial
+                actualizarBadge();
+              });
+          },
+          function (error) {
+            setTimeout(conectarChat, 5000);
+          },
+        );
+      }
+
+      function procesarMensaje(m, esEnVivo) {
+        // 1. Actualizar el reloj del servidor
+        let msgDate = new Date(m.hora);
+        if (msgDate > latestServerDate) {
+          latestServerDate = msgDate;
+        }
+
+        // 2. Mostrar en pantalla
+        mostrarMensaje(m.remitente, m.contenido, m.hora);
+
+        // 3. Calcular notificación
+        // Ignoramos mayúsculas/minúsculas para evitar errores
+        if (m.remitente.toLowerCase() !== usuarioActual.toLowerCase()) {
+          // Si el mensaje es más nuevo que lo último que leí
+          if (msgDate > lastReadDate) {
+            // Si el chat está cerrado O (está abierto pero es historial antiguo que no vi)
+            if (!chatAbierto || !esEnVivo) {
+              notificaciones++;
+              if (esEnVivo) {
+                actualizarBadge();
+                playNotificationSound();
+              }
+            } else {
+              // Si está abierto y llega en vivo, actualizamos la lectura al vuelo
+              marcarTodoComoLeido();
+            }
+          }
+        } else {
+          // Si el mensaje ES MÍO (ej: lo acabo de enviar yo desde otro PC o pestaña)
+          // Asumimos que si yo escribí, he leído hasta aquí.
+          if (esEnVivo && chatAbierto) {
+            marcarTodoComoLeido();
+          }
+        }
+      }
+
+      function sendChatMsg() {
+        var inp = document.getElementById("chatInput");
+        var txt = inp.value.trim();
+        if (txt && stompClientChat) {
+          stompClientChat.send(
+            "/app/chat.enviar",
+            {},
+            JSON.stringify({ remitente: usuarioActual, contenido: txt }),
+          );
+          inp.value = "";
+          inp.focus();
+          // Al enviar, no marcamos leído inmediatamente aquí,
+          // esperamos a que el servidor nos devuelva el mensaje por el topic para tener la fecha correcta.
+        }
+      }
+
+      function mostrarMensaje(remite, texto, hora) {
+        var box = document.getElementById("chatMessages");
+        var isMe = remite.toLowerCase() === usuarioActual.toLowerCase();
+        var alignClass = isMe ? "mine" : "other";
+
+        var nombreLower = remite.toLowerCase();
+        var isCocinaMsg =
+          nombreLower.includes("cocina") || nombreLower.includes("chef");
+        var colorClass = isCocinaMsg ? "bubble-cocina" : "bubble-sala";
+        var estiloExtra = !isMe
+          ? "background-color: #ffffff; color: #333; border: 1px solid #e2e8f0;"
+          : "background: linear-gradient(135deg, #f59e0b, #d97706); color: white;";
+
+        var horaVisual = hora;
+        if (hora && hora.includes("T")) {
+          horaVisual = hora.split("T")[1].substring(0, 5);
+        }
+
+        var html = `
+            <div class="msg-row ${alignClass}">
+                <div class="msg-bubble ${colorClass}" style="${estiloExtra}; padding: 10px 15px; border-radius: 15px; margin-bottom: 8px; display: inline-block; max-width: 80%;">
+                    <span class="msg-sender" style="font-size: 0.75rem; font-weight: bold; display: block; margin-bottom: 2px; ${!isMe ? "color: #2563eb;" : "color: white; opacity:0.9;"}">${remite}</span>
+                    <span style="display: block; word-wrap: break-word;">${texto}</span>
+                    <span class="msg-time" style="font-size: 0.7rem; display: block; text-align: right; margin-top: 4px; ${!isMe ? "color: #94a3b8;" : "color: white; opacity: 0.8;"}">${horaVisual}</span>
+                </div>
+            </div>`;
+        box.insertAdjacentHTML("beforeend", html);
+        if (chatAbierto) scrollToBottom();
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        conectarChat();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,294 @@
+/* === ESTILOS ESPECÍFICOS DE COCINA === */
+
+/* Layout horizontal del ticket */
+.ticket-paint {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 350px;
+    max-width: 450px;
+    gap: 15px;
+    padding: 20px;
+}
+
+.ticket-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.info-grupo { 
+    font-weight: bold; 
+    color: #334155; 
+}
+
+.mesa-id { 
+    font-size: 1.1rem; 
+    background: #e0f2fe; 
+    color: #0284c7; 
+    padding: 4px 12px; 
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.plato-nombre { 
+    font-size: 1rem; 
+    font-weight: 700; 
+    color: #1e293b; 
+    line-height: 1.4; 
+    margin-top: 5px;
+}
+
+.tiempo-prep {
+    font-weight: normal;
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 4px;
+    display: block;
+}
+
+.btn-prep { 
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    min-width: 120px;
+    text-align: center;
+}
+
+.btn-prep:active { 
+    transform: scale(0.95); 
+}
+
+.btn-preparar {
+    background: #f59e0b;
+    color: white;
+}
+
+.btn-preparar:hover {
+    background: #d97706;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+}
+
+.btn-listo {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-listo:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.platos-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.partida-seccion {
+    margin-bottom: 35px;
+}
+
+.menu-tag {
+    background: #fef3c7;
+    color: #b45309;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    display: inline-block;
+    margin-left: 8px;
+}
+
+.btn-ver-finalizados {
+    display: inline-block;
+    background: #10b981;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(16, 185, 129, 0.3);
+    transition: all 0.2s;
+}
+
+.btn-ver-finalizados:hover {
+    background: #059669;
+    transform: translateY(-2px);
+    color: white;
+}
+
+/* === CHAT FLOTANTE COCINA === */
+.chat-float-btn {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 60px;
+    height: 60px;
+    background: #f97316;
+    color: white;
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    cursor: pointer;
+    z-index: 10000;
+    transition: transform 0.2s;
+}
+
+.chat-float-btn:hover {
+    transform: scale(1.1);
+}
+
+.chat-window {
+    position: fixed;
+    bottom: 95px;
+    right: 25px;
+    width: 340px;
+    height: 450px;
+    background: #f0f2f5;
+    border-radius: 15px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    display: none;
+    flex-direction: column;
+    z-index: 10000;
+    overflow: hidden;
+    border: 1px solid #d1d5db;
+}
+
+.chat-header {
+    background: #f97316;
+    color: white;
+    padding: 15px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.chat-input-area {
+    padding: 12px;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 8px;
+}
+
+.chat-input {
+    flex: 1;
+    border: 1px solid #d1d5db;
+    border-radius: 20px;
+    padding: 10px 15px;
+    outline: none;
+}
+
+.chat-input:focus {
+    border-color: #f97316;
+}
+
+.chat-send-btn {
+    border: none;
+    background: #f97316;
+    color: white;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat-send-btn:hover {
+    background: #ea580c;
+}
+
+/* Burbujas de chat */
+.msg-row {
+    display: flex;
+    width: 100%;
+}
+
+.msg-row.mine {
+    justify-content: flex-end;
+}
+
+.msg-row.other {
+    justify-content: flex-start;
+}
+
+.msg-bubble {
+    padding: 10px 14px;
+    border-radius: 16px;
+    max-width: 75%;
+    font-size: 0.9rem;
+    position: relative;
+    line-height: 1.4;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.bubble-cocina {
+    background-color: #f97316;
+    color: white;
+    border-bottom-left-radius: 4px;
+}
+
+.bubble-sala {
+    background-color: #3b82f6;
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.msg-row.mine .bubble-cocina {
+    border-bottom-right-radius: 4px;
+    border-bottom-left-radius: 16px;
+}
+
+.msg-row.other .bubble-sala {
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 16px;
+}
+
+.msg-sender {
+    font-size: 0.75rem;
+    font-weight: bold;
+    margin-bottom: 2px;
+    display: block;
+    opacity: 0.9;
+}
+
+.msg-time {
+    font-size: 0.65rem;
+    opacity: 0.8;
+    float: right;
+    margin-top: 4px;
+    margin-left: 8px;
+}
+
+.chat-system-msg {
+    text-align: center;
+    color: #9ca3af;
+    font-size: 0.75rem;
+    margin-top: 10px;
+}

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{inventory.lots.title_page}">Historial de Consumos - Restaurantus</title>
+    <link rel="icon" href="/images/favicon.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body>
+    <div th:replace="~{/page_dashboard/dashboard :: sidebar(activePage='inventory')}"></div>
+
+    <div class="admin-container">
+        <main class="main-content with-dashboard">
+            <div class="panel-header" style="margin-bottom: 20px;">
+                <h1 th:text="#{inventory.lots.title}">Historial de Lotes</h1>
+                <p th:text="#{inventory.lots.subtitle}">Registro detallado de lotes del ingrediente:</p>
+                <span th:text="${param.id}"></span>
+                
+                <div class="nav-tabs" style="margin-top: 25px;">
+                    <a th:href="@{/almacen/inventario}" class="btn-action btn-primary" style="text-decoration:none; display: inline-block; width: auto; padding: 10px 20px;"
+                    th:text="'← ' + #{inventory.form.back}">← Volver al almacen</a>
+                </div>
+            </div>
+
+            <div style="background-color: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                <table id="tablaConsumos" class="data-table">
+                    <thead>
+                        <tr>
+                            <th th:text="#{inventory.lots.th_id}">Identificador</th>
+                            <th th:text="#{inventory.lots.th_initial}">Cantidad Inicial</th>
+                            <th th:text="#{inventory.lots.th_remaining}">Cantidad Restante</th>
+                            <th th:text="#{inventory.lots.th_entry}">Fecha Entrada</th>
+                            <th th:text="#{inventory.lots.th_expiry}">Fecha Caducidad</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th><input type="text" th:placeholder="#{inventory.lots.th_id} + '...'"></th>
+                            <th><input type="text" th:placeholder="#{inventory.lots.th_initial} + '...'"></th>
+                            <th><input type="text" th:placeholder="#{inventory.lots.th_remaining} + '...'"></th>
+                            <th><input type="text" th:placeholder="#{inventory.lots.th_entry} + '...'"></th>
+                            <th><input type="text" th:placeholder="#{inventory.lots.th_expiry} + '...'"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="lot : ${lotes}">
+                            <td th:text="${lot.id}"></td>
+                            <td th:text="${lot.cantidadInicial}"></td>
+                            <td th:text="${lot.cantidadRestante}"></td>
+                            <td th:text="${#temporals.format(lot.fechaEntrada, 'dd/MM/yyyy hh:mm')}"></td>
+                            <td>
+                                <span th:text="${#temporals.format(lot.fechaCaducidad, 'dd/MM/yyyy')}"></span>
+                                <span th:if="${lot.caducado}" th:text="'(' + #{inventory.lots.expired_label} + ')'">(Caducado)</span>
+                                <span th:if="!${lot.caducado}" th:text="'(' + #{inventory.lots.not_expired} + ')'">(Aún no caduca)</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+        window.datatableTranslations = {
+            search: "",
+            searchPlaceholder: /*[[#{crudCommons.search}]]*/ "Buscar",
+            lengthMenu: /*[[#{crudCommons.lengthMenu}]]*/ "Mostrar _MENU_ registros",
+            infoFiltered: "",
+            info: /*[[#{crudCommons.info}]]*/ "Mostrando _START_ a _END_ de <b>_TOTAL_</b> registros",
+            infoEmpty: /*[[#{crudCommons.infoEmpty}]]*/ "Mostrando 0 a 0 de 0 registros",
+            paginate: {
+                next: /*[[#{crudCommons.next}]]*/ "Siguiente",
+                previous: /*[[#{crudCommons.previous}]]*/ "Anterior",
+                first: /*[[#{crudCommons.first}]]*/ "Primero",
+                last: /*[[#{crudCommons.last}]]*/ "Último"
+            }
+        };
+    </script>
+</body>
+</html>

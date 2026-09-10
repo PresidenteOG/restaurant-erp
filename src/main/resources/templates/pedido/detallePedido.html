@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{pedido.detalle.title_page}">Detalle del Pedido - Restaurantus</title>
+    <link rel="icon" href="/images/favicon.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+
+<body>
+<div class="admin-container">
+
+    <div class="main-content" style="max-width: 800px; margin: 0 auto;">
+
+        <div class="panel-header">
+            <h1 th:text="#{pedido.detalle.h1}">Detalle del Pedido</h1>
+            <p th:text="#{pedido.detalle.ticket_prefix} + ' #' + ${pedido.id}"></p>
+        </div>
+
+        <div class="order-card" style="box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+
+            <div class="order-header" style="background: white; padding: 25px 30px;">
+                <h3 class="order-title" style="font-size: 1.4rem;"> 
+                    <span th:text="#{pedido.detalle.summary_table}">Resumen pedido Mesa</span> 
+                    <span th:text="${pedido.mesa.numMesa}"></span>
+                </h3>
+                <span class="hora-id" th:text="${#temporals.format(pedido.fechaEntrada, 'dd/MM/yyyy HH:mm')}"></span>
+            </div>
+
+            <div class="order-body" style="padding: 0 30px 30px 30px;">
+
+                <div th:each="linea : ${pedido.detallesPlatos}" class="order-item-detail" 
+                    style="padding: 15px 0; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
+                    
+                    <div class="item-info" style="display: flex; align-items: center;">
+                        <div class="order-quantity" style="font-weight: 600; color: #64748b; background: #f1f5f9; padding: 6px 12px; border-radius: 6px; margin-right: 15px;">
+                            <span th:text="${linea.cantidad}"></span> x
+                        </div>
+                        <div>
+                            <span class="plato-nombre" style="margin: 0; font-size: 1.05rem; color: #1e293b; font-weight: 500;"
+                                th:text="${linea.plato.nombre}"></span>
+                            <span th:if="${linea.esMenu}" class="status-pill status-active" 
+                                  style="margin-left: 10px; font-size: 0.7rem;" th:text="#{pedido.detalle.badge_menu}">MENÚ</span>
+                        </div>
+                    </div>
+
+                    <div sec:authorize="hasAnyRole('CAJA', 'FACTURISTA', 'ADMIN', 'GERENTE')" style="text-align: right; min-width: 80px;">
+                        <div th:unless="${linea.esMenu}">
+                            <span style="color: #94a3b8; font-size: 0.9rem;" th:text="${#numbers.formatDecimal(linea.plato.precio, 1, 2)} + '€'"></span>
+                            <div style="font-weight: 700; color: #064e3b;" 
+                                th:text="${#numbers.formatDecimal(linea.cantidad * linea.plato.precio, 1, 2)} + '€'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div sec:authorize="hasAnyRole('CAJA', 'FACTURISTA', 'ADMIN', 'GERENTE')"
+                    style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 1.2rem; font-weight: 700; color: #1e293b;" th:text="#{pedido.detalle.total_label}">TOTAL TICKET</span>
+                    <span style="font-size: 1.5rem; font-weight: 800; color: #064e3b;" 
+                        th:text="${#numbers.formatDecimal(pedido.total, 1, 2)} + '€'"></span>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center;">
+            
+            <a th:href="@{/pedidos/finalizados}" class="edit-link" 
+               style="display: inline-block; padding: 10px 20px; border-radius: 8px; background: #fff; border: 1px solid #e2e8f0;">
+               ← <span th:text="#{pedido.detalle.back_finished}">Ir al listado de finalizados</span>
+            </a>
+
+            <a th:href="@{/pedidos/listado}" sec:authorize="hasAnyRole('CAMARERO', 'CAJA', 'ADMIN', 'GERENTE')"
+               class="edit-link" style="display: inline-block; padding: 10px 20px; border-radius: 8px; background: #fff; border: 1px solid #e2e8f0;">
+               ← <span th:text="#{pedido.detalle.back_active}">Volver a pedidos activos</span>
+            </a>
+
+            <a th:href="@{/finanzas/pendientesCobro}" sec:authorize="hasAnyRole('CAJA', 'FACTURISTA', 'ADMIN', 'GERENTE')"
+               class="edit-link" style="display: inline-block; padding: 10px 20px; border-radius: 8px; background: #fff; border: 1px solid #e2e8f0;">
+               ← <span th:text="#{pedido.detalle.back_billing}">Volver a pedidos por cobrar</span>
+            </a>
+
+            <a th:href="@{/cocina/pendientes}" sec:authorize="hasAnyRole('JEFE_COCINA', 'COCINERO', 'ADMIN', 'GERENTE')"
+               class="edit-link" style="display: inline-block; padding: 10px 20px; border-radius: 8px; background: #fff; border: 1px solid #e2e8f0;">
+               ← <span th:text="#{pedido.detalle.back_kitchen}">Volver a cocina</span>
+            </a>
+        </div>
+
+    </div>
+
+</div>
+</body>
+</html>

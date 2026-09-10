@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{userUpdate.title_page}">Modificar Usuario - Restaurantus</title>
+    <link rel="icon" href="/images/favicon.png">
+    <meta charset="windows-1252">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/userModify.css">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+
+<body>
+    <div class="admin-container">
+        <main class="main-content">
+            <div class="panel-header">
+                <h1 th:text="#{userUpdate.h1}">Modificar Usuario</h1>
+                <p th:text="#{userUpdate.subtitle}">Actualiza la información, estado y permisos del usuario.</p>
+            </div>
+
+            <div th:if="${error}" class="alert-error">
+                <span class="icon">⚠️</span>
+                <span th:text="${error}">Mensaje de error</span>
+            </div>
+
+            <div class="form-card">
+                <form th:object="${user}" th:action="@{/users/updateUser}" method="post" enctype="multipart/form-data">
+                    <input type="hidden" th:field="*{id}" />
+                    <input type="hidden" th:field="*{foto}" />
+                    <input type="hidden" th:field="*{telegramChatId}" />
+                    <input type="hidden" th:field="*{telegramToken}" />
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="username" th:text="#{userUpdate.label_username}">Nombre de Usuario</label>
+                            <!-- Si el usuario es admin, no se puede editar el username-->
+                            <input type="text" id="username" th:field="*{username}" readonly required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email" th:text="#{userUpdate.label_email}">Correo Electrónico</label>
+                            <input type="email" id="email" th:field="*{email}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phoneNumber" th:text="#{userUpdate.label_telephone}">Número de Teléfono</label>
+                            <input type="tel" id="phoneNumber" th:field="*{phoneNumber}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="enabled" th:text="#{userUpdate.label_status}">Estado del Usuario</label>
+                            <select id="enabled" th:field="*{enabled}" class="status-select"
+                                th:classappend="${user.enabled} ? 'status-border-active' : 'status-border-inactive'"
+                                required>
+                                <option th:value="true" th:text="#{userUpdate.status_active}">Activo</option>
+                                <option th:value="false" th:text="#{userUpdate.status_inactive}">Inactivo</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label th:text="#{userUpdate.label_photo}">Foto de Perfil</label>
+                            <div class="upload-container-flex"
+                                style="display: flex; align-items: center; gap: 15px; margin-top: 10px; width: 99.25%;">
+
+                                <div class="avatar-wrapper"
+                                    style="width: 80px; height: 80px; border-radius: 12px; overflow: hidden; border: 2px solid #28a745;">
+                                    <img id="imgPreview" th:src="${user.foto != null  ? '/images/profiles/' + user.foto 
+                                    : '/images/profiles/default-profile.png'}" 
+                                    alt="Preview" style="width: 100%; height: 100%;">
+                                </div>
+
+                                <div class="button-expanding-wrapper" style="flex-grow: 1;">
+                                    <label for="fotoFile" class="btn-action btn-outline"
+                                        style="cursor: pointer; display: block; text-align: center; padding: 10px;">
+                                        <span th:text="#{userUpdate.btn_change_photo}">Cambiar Imagen</span>
+                                    </label>
+                                    <input type="file" id="fotoFile" name="fotoFile" accept="image/*"
+                                        style="display: none;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label th:text="#{userUpdate.label_security}">Seguridad</label>
+                            <a th:href="@{'/users/admin-password-' + *{id}}" class="change-password"
+                                style="display: block; margin-top: 28px;" th:text="#{userUpdate.change_password}">
+                                🔑 Cambiar Contraseña
+                            </a>
+                            <input type="hidden" th:field="*{password}" />
+                        </div>
+                    </div>
+
+                    <h3 class="section-title" th:text="#{userUpdate.roles_section}">Asignación de Roles</h3>
+                    <div class="roles-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;" th:text="#{userUpdate.th_assign}">Asignar</th>
+                                    <th th:text="#{userUpdate.th_role_name}">Nombre del Rol</th>
+                                    <th th:text="#{userUpdate.th_type}">Tipo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="role : ${allRoles}" th:if="${role.isActive}">
+                                    <td>
+                                        <input type="checkbox" th:field="*{roles}" th:value="${role.id}"
+                                            class="checkbox-custom" />
+                                    </td>
+                                    <td th:text="${role.name}" class="fw-600"></td>
+                                    <td>
+                                        <span
+                                            th:class="${role.isInternal} ? 'status-pill roletype-internal' : 'status-pill roletype-tag'"
+                                            th:text="${role.isInternal} ? #{userUpdate.role_internal} : #{userUpdate.role_tag}">
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-action btn-primary" th:text="#{userUpdate.btn_save}">Guardar
+                            Cambios</button>
+                        <a th:href="@{/users/}" class="btn-action btn-outline"
+                            style="width: 50%; text-decoration: none; display: inline-block;"
+                            th:text="#{userUpdate.btn_cancel}">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</body>
+<script>
+    document.getElementById('enabled').addEventListener('change', function () {
+
+        if (this.value === 'true') {
+            this.classList.add('status-border-active');
+            this.classList.remove('status-border-inactive');
+        } else {
+            this.classList.add('status-border-inactive');
+            this.classList.remove('status-border-active');
+        }
+    });
+
+    // Script para previsualizar la imagen en la página de Update
+    document.getElementById('fotoFile').addEventListener('change', function (event) {
+        const reader = new FileReader();
+        reader.onload = function () {
+            const output = document.getElementById('imgPreview');
+            output.src = reader.result;
+        };
+        if (event.target.files[0]) {
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    });
+</script>
+
+</html>

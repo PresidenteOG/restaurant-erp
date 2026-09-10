@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{finanzas.abrir.title_page}">Apertura de Caja - Restaurantus</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body style="background: #f1f5f9; display: flex; align-items: center; justify-content: center; height: 100vh;">
+
+    <div class="order-card" style="width: 100%; max-width: 400px; padding: 40px; background: white; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div th:if="${error}" style="background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                <span th:text="${error}"></span>
+            </div>
+            <div style="font-size: 3rem;">🏦</div>
+            <h1 style="color: #1e293b; margin-top: 10px;" th:text="#{finanzas.abrir.title}">Apertura de Turno</h1>
+            <p style="color: #64748b;" th:text="#{finanzas.abrir.subtitle}">Introduzca el efectivo inicial en caja</p>
+        </div>
+
+        <form th:action="@{/finanzas/abrirArqueo}" method="post">
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #475569;" th:text="#{finanzas.abrir.label_fondo}">FONDO DE CAJA (€)</label>
+                <input type="number" name="efectivoInicial" step="0.01" required placeholder="Ej: 150.00"
+                       style="width: 100%; padding: 15px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 1.5rem; text-align: center; color: #1e293b;">
+            </div>
+
+            <button type="submit" class="btn-action" style="width: 100%; padding: 15px; background: #059669; font-size: 1.1rem; font-weight: bold; border-radius: 12px; border: none; color: white; cursor: pointer;"
+             th:text="#{finanzas.abrir.btn_confirmar}">CONFIRMAR Y EMPEZAR TURNO
+            </button>
+        </form>
+    </div>
+
+</body>
+</html>

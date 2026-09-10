@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${menu.nombre} + ' - ' + #{carta.detalle.title_suffix}"></title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body>
+    <div class="admin-container">
+        <main class="main-content" style="max-width: 1000px; margin: 40px auto;">
+            
+            <div class="panel-header" style="background: #1e293b; padding: 20px 30px; border-radius: 12px; margin-bottom: 25px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h1 th:text="${menu.nombre}" style="margin: 0; font-size: 2rem; color: #ffffff !important;"></h1 >
+                        <p th:text="#{carta.detalle.price_label} + ' ' + ${menu.precio} + '€'" 
+                        style="color: #cbd5e1 !important; margin: 2px 0 0 0; font-size: 1.1rem;"></p>
+                    </div>
+                    <a th:href="@{/carta}" class="btn-volver" th:text="'← ' + #{carta.plato.back}">Volver a la carta</a>
+                </div>
+            </div>
+
+            <h2 style="color: #475569; font-size: 1.2rem; margin-bottom: 15px;" th:text="#{carta.detalle.included_dishes}">Platos incluidos en este menú:</h2>
+
+            <div class="grid-platos-menu">
+                <div th:each="p : ${menu.platos}" class="plato-card">
+                    <span class="categoria-tag" th:text="${p.categoria}"></span>
+                    <h3 th:text="${p.nombre}" style="margin: 5px 0; color: #1e293b; font-size: 1.1rem;"></h3>
+                    
+                    <div style="display: flex; align-items: center; gap: 10px; color: #94a3b8; font-size: 0.85rem;">
+                        <span>⏱️ <span th:text="${p.tiempoPreparacion}"></span> min</span>
+                        <span th:if="${p.especial}" style="color: #f59e0b;" th:text="'⭐ ' + #{carta.ver.status_special}">⭐ Especial</span>
+                    </div>
+
+                    <div class="ingredientes-container">
+                        <span th:each="pi : ${p.ingredientes}" 
+                              class="ingrediente-pill" 
+                              th:text="${pi.ingrediente.nombre}">
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${#lists.isEmpty(menu.platos)}" 
+                 style="text-align: center; padding: 60px; background: #f8fafc; border-radius: 12px; border: 2px dashed #e2e8f0; margin-top: 20px;">
+                <p style="color: #94a3b8; font-size: 1.1rem;" th:text="#{carta.detalle.empty}">Este menú no tiene platos asignados todavía.</p>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

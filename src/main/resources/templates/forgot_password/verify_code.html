@@ -1,0 +1,84 @@
+    <!DOCTYPE html>
+    <html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title th:text="#{forgot_pwd.verify.title_page}">Verificar Código</title>
+        <link rel="icon" href="/images/favicon.png">
+        <link rel="stylesheet" th:href="@{/css/auth.css}">
+        <style>
+            /* Estilo para el enlace deshabilitado */
+            .disabled-link {
+                color: #94a3b8; /* Gris apagado */
+                pointer-events: none;
+                text-decoration: none;
+                cursor: default;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="auth-card">
+            <span class="auth-icon">📱</span>
+            <h1 class="auth-title" th:text="#{forgot_pwd.verify.h1}">Verificación</h1>
+            <p class="auth-subtitle" th:text="#{forgot_pwd.verify.subtitle}">Hemos enviado un código a tu Telegram. Introdúcelo abajo.</p>
+            
+            <div th:if="${error}" class="alert-error">
+                <span>⚠️</span> <span th:text="${error}">Error</span>
+            </div>
+            <div th:if="${info}" class="alert-info" style="color: #2ecc71; margin-bottom: 1rem;">
+                <span>✅</span> <span th:text="${info}">Info</span>
+            </div>
+
+            <form th:action="@{/verify-code}" method="post">
+                <input type="hidden" name="username" th:value="${username}">
+
+                <div class="form-group">
+                    <label class="form-label" style="text-align: center;" th:text="#{forgot_pwd.verify.label_code}">Código de 6 dígitos</label>
+                    <input type="text" name="code" class="form-control otp-input" maxlength="6" placeholder="000000" autocomplete="off" required>
+                </div>
+
+                <button type="submit" class="btn-primary" th:text="#{forgot_pwd.verify.btn_verify}">Verificar Cuenta</button>
+            </form>
+            
+            <div style="margin-top: 1.5rem;">
+                <a id="resendLink" th:href="@{/resend-code(username=${username})}" class="auth-link disabled-link">
+                <span th:text="#{forgot_pwd.verify.resend_text}">Reenviar código</span> 
+                (<span id="timer" th:text="${waitTime}">30</span>s)
+                </a>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            
+            // Usamos esta sintaxis especial: /*[[${variable}]]*/ valor_por_defecto;
+            // Si Thymeleaf funciona, reemplaza todo por el valor.
+            // Si falla, usa el 30 por defecto.
+            let timeLeft = /*[[${waitTime}]]*/ 30; 
+            const resendNowText = /*[[#{forgot_pwd.verify.resend_now}]]*/ "Reenviar código ahora";
+            
+            // Aseguramos que sea un número (por si acaso llega null)
+            if (!timeLeft) timeLeft = 30;
+
+            const timerElement = document.getElementById('timer');
+            const resendLink = document.getElementById('resendLink');
+            
+            // Solo iniciamos el timer si los elementos existen (seguridad extra)
+            if (timerElement && resendLink) {
+                
+                // Función de cuenta atrás
+                const countdown = setInterval(() => {
+                    timeLeft--;
+                    timerElement.textContent = timeLeft;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(countdown);
+                        // Habilitamos el enlace
+                        resendLink.classList.remove('disabled-link');
+                        // Cambiamos el texto para indicar que ya se puede clicar
+                        resendLink.innerHTML = resendNowText;
+                    }
+                }, 1000);
+            }
+            /*]]>*/
+        </script>
+    </body>
+    </html>

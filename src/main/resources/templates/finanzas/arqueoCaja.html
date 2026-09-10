@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{finanzas.arqueo.title_page}">Arqueo de Caja - Restaurantus</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body style="background-color: #f8fafc;">
+<div class="admin-container">
+    <main class="main-content" style="max-width: 600px; margin: 0 auto; padding: 10px;">
+        
+        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <div>
+                <h1 style="font-size: 1.5rem; margin-bottom: 0;" th:text="#{finanzas.arqueo.title}">Arqueo de Caja</h1>
+                <p style="font-size: 0.85rem; color: #64748b;" th:text="${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy HH:mm')}"></p>
+            </div>
+            <span style="background: #d6f7e0; color: #10b981; padding: 4px 10px; border-radius: 15px; font-weight: bold; font-size: 0.75rem;" th:text="#{finanzas.arqueo.turno_abierto}">TURNO ABIERTO</span>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <a th:href="@{/finanzas/pendientesCobro}" class="btn-action" 
+            style="background: #475569; text-decoration: none; color: white; padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 45%;">
+                <span style="font-size: 1.1rem;">← </span><span th:text="#{finanzas.arqueo.return_to_pending}">Volver a Pendientes de Cobro</span>
+            </a>
+        </div>
+
+        <div class="order-card" style="padding: 12px; margin-bottom: 15px; border-left: 4px solid #10b981; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
+            <div>
+                <label style="color: #64748b; font-size: 0.7rem; text-transform: uppercase; display: block;" th:text="#{finanzas.cobro.efectivo}">Efectivo</label>
+                <div style="font-size: 1.1rem; font-weight: bold; color: #1e293b;" th:text="${#numbers.formatDecimal(ventasEfectivo, 1, 2) + '€'}">0.00€</div>
+            </div>
+            <div>
+                <label style="color: #64748b; font-size: 0.7rem; text-transform: uppercase; display: block;" th:text="#{finanzas.cobro.tarjeta}">Tarjeta</label>
+                <div style="font-size: 1.1rem; font-weight: bold; color: #1e293b;" th:text="${#numbers.formatDecimal(ventasTarjeta, 1, 2) + '€'}">0.00€</div>
+            </div>
+            <div style="background: #f1f5f9; border-radius: 8px; padding: 4px;">
+                <label style="color: #10b981; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; display: block;" th:text="#{finanzas.arqueo.total_sales}">Total Ventas</label>
+                <div style="font-size: 1.2rem; font-weight: 900; color: #1e293b;" th:text="${#numbers.formatDecimal(totalVentas, 1, 2) + '€'}">0.00€</div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div style="background: white; padding: 15px; border-radius: 12px; border-left: 5px solid #3b82f6; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px;">
+                <div style="font-size: 1.8rem;">⭐</div>
+                <div>
+                    <label style="color: #64748b; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; display: block;" th:text="#{finanzas.arqueo.star_dish}">Plato Estrella</label>
+                    <div style="font-size: 1rem; font-weight: bold; color: #1e293b;"
+                    th:text="${platoMasVendido == 'Sin datos' ? #messages.msg('finanzas.arqueo.no_data')
+                        : platoMasVendido == 'Sin ventas' ? #messages.msg('finanzas.arqueo.no_sales')
+                        : platoMasVendido}">Cargando...</div>
+                </div>
+            </div>
+
+            <div style="background: white; padding: 15px; border-radius: 12px; border-left: 5px solid #8b5cf6; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px;">
+                <div style="font-size: 1.8rem;">🏆</div>
+                <div>
+                    <label style="color: #64748b; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; display: block;" th:text="#{finanzas.arqueo.star_menu}">Menú Estrella</label>
+                    <div style="font-size: 1rem; font-weight: bold; color: #1e293b;"
+                    th:text="${menuMasVendido == 'Sin datos' ? #messages.msg('finanzas.arqueo.no_data')
+                        : menuMasVendido == 'Sin ventas' ? #messages.msg('finanzas.arqueo.no_sales')
+                        : menuMasVendido}">Cargando...</div>
+                </div>
+            </div>
+        </div>
+
+        <form th:action="@{/finanzas/guardarArqueo}" method="post" class="order-card" style="padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            <input type="hidden" name="id" th:value="${arqueoActual.id}">
+            <input type="hidden" name="ventasTarjeta" th:value="${ventasTarjeta}">
+            
+            <h3 style="margin-bottom: 15px; color: #475569; font-size: 1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;"
+            th:text="#{finanzas.arqueo.calculo_efectivo}">Cálculo de Efectivo</h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div>
+                    <label style="font-size: 0.85rem; color: #475569;" th:text="#{finanzas.arqueo.efectivo_inicial} + ' (€)'">Fondo Inicial (€)</label>
+                    <input type="number" id="efectivoInicial" name="efectivoInicial" step="0.01" 
+                           th:value="${arqueoActual.efectivoInicial}" class="input-field" style="padding: 8px; font-size: 0.9rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.85rem; color: #475569;" th:text="#{finanzas.arqueo.ventas_efectivo} + ' (+)'">Ventas Efectivo (+)</label>
+                    <input type="number" id="ventasEfectivo" name="ventasEfectivo" 
+                           th:value="${ventasEfectivo}" readonly class="input-field-readonly" 
+                           style="background: #f8fafc; padding: 8px; font-size: 0.9rem; border: 1px solid #e2e8f0;">
+                </div>
+                <div>
+                    <label style="font-size: 0.85rem; color: #475569;" th:text="#{finanzas.arqueo.salidas_efectivo} + ' (-)'">Salidas / Gastos (-)</label>
+                    <input type="number" id="salidasEfectivo" name="salidasEfectivo" step="0.01" value="0.00" class="input-field" style="padding: 8px; font-size: 0.9rem;">
+                </div>
+                <div style="background: #d6f7e0; padding: 8px; border-radius: 8px; border: 1px solid #a7e0b4; text-align: center;">
+                    <label style="font-weight: bold; color: #10b981; font-size: 0.75rem; display: block;" th:text="#{finanzas.arqueo.efectivo_teorico}">Efectivo Teórico</label>
+                    <div id="displayTeorico" style="font-size: 1.2rem; font-weight: 800; color: #10b981;">0.00€</div>
+                    <input type="hidden" id="efectivoTeorico" name="efectivoTeorico">
+                </div>
+            </div>
+
+            <div style="background: #1e293b; color: white; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                <label style="color: #94a3b8; display: block; text-align: center; margin-bottom: 10px; font-size: 0.75rem; font-weight: bold; letter-spacing: 1px;"
+                th:text="#{finanzas.arqueo.efectivo_real}">EFECTIVO REAL EN CAJA</label>
+                
+                <div style="background: white; border-radius: 8px; padding: 10px; border: 3px solid #10b981;">
+                    <input type="number" id="efectivoReal" name="efectivoReal" step="0.01" required placeholder="0.00"
+                           style="width: 100%; font-size: 2.2rem; background: white; border: none; color: #1e293b; text-align: center; outline: none; font-weight: bold;">
+                </div>
+                
+                <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #334155; padding-top: 10px;">
+                    <span style="color: #94a3b8; font-size: 0.85rem;" th:text="#{finanzas.arqueo.diferencia}">Diferencia:</span>
+                    <span id="displayDiferencia" style="font-size: 1.3rem; font-weight: bold;">0.00€</span>
+                </div>
+            </div>
+
+            <button type="submit" id="btnGuardar" class="btn-action" style="width: 100%; padding: 12px; background: #059669; font-weight: bold; font-size: 1rem; border-radius: 8px;"
+            th:text="#{finanzas.arqueo.btn_cerrar}">CERRAR CAJA Y GUARDAR
+            </button>
+        </form>
+    </main>
+</div>
+
+<script>
+    const ids = ['efectivoInicial', 'ventasEfectivo', 'salidasEfectivo', 'efectivoReal'];
+    
+    function calcular() {
+        const val = (id) => {
+            const el = document.getElementById(id);
+            return el ? parseFloat(el.value) || 0 : 0;
+        };
+
+        const inicial = val('efectivoInicial');
+        const ventas = val('ventasEfectivo');
+        const salidas = val('salidasEfectivo');
+        const real = val('efectivoReal');
+
+        const teorico = inicial + ventas - salidas;
+        const diferencia = real - teorico;
+
+        // Actualizar UI
+        document.getElementById('displayTeorico').innerText = teorico.toFixed(2) + '€';
+        document.getElementById('efectivoTeorico').value = teorico.toFixed(2);
+        
+        const diffElem = document.getElementById('displayDiferencia');
+        diffElem.innerText = (diferencia > 0 ? '+' : '') + diferencia.toFixed(2) + '€';
+        
+        // Colores de la diferencia
+        if (Math.abs(diferencia) < 0.01) {
+            diffElem.style.color = "#10b981"; // Verde (Cuadrado)
+        } else if (diferencia < 0) {
+            diffElem.style.color = "#ef4444"; // Rojo (Falta dinero)
+        } else {
+            diffElem.style.color = "#f59e0b"; // Naranja (Sobra dinero)
+        }
+
+        // --- LÓGICA DE VALIDACIÓN DEL BOTÓN ---
+        const btn = document.getElementById('btnGuardar');
+        if (real <= 0) {
+            btn.disabled = true;
+            btn.style.opacity = "0.5";
+            btn.style.cursor = "not-allowed";
+        } else {
+            btn.disabled = false;
+            btn.style.opacity = "1";
+            btn.style.cursor = "pointer";
+        }
+        // ---------------------------------------
+
+        // Colores de la diferencia (tu código existente)
+        if (Math.abs(diferencia) < 0.01) {
+            diffElem.style.color = "#10b981"; 
+        } else if (diferencia < 0) {
+            diffElem.style.color = "#ef4444"; 
+        } else {
+            diffElem.style.color = "#f59e0b"; 
+        }
+    }
+
+    // Listeners
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.addEventListener('input', calcular);
+    });
+
+    // Ejecución inicial
+    window.onload = calcular;
+</script>
+</body>
+</html>

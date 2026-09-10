@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="#{pedido.form.title_page}">Tomar Pedido - Restaurantus</title>
+    <link rel="icon" href="/images/favicon.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+    <style>
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            font-family: inherit;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+        }
+
+        select:focus {
+            border-color: #2ecc71;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <main class="main-content">
+            
+            <div class="panel-header" style="max-width: 1000px; margin: 0 auto 20px auto;">
+                <div>
+                    <h1 style="color: #064e3b; margin: 0;" 
+                        th:text="${pedido?.id == null ? #messages.msg('pedido.form.h1_new') : #messages.msg('pedido.form.h1_edit')}">
+                    </h1>
+                    <p style="color: #64748b;" th:text="#{pedido.form.subtitle}">Pulsa sobre los productos para añadirlos al ticket</p>
+                </div>
+            </div>
+
+            <div class="pedido-container" style="max-width: 1100px; margin: 0 auto;">
+                <div class="carta-seleccion">
+                    <div class="category-filters" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                        <button type="button" class="filter-btn active" onclick="filtrarCategoria('todos', event)" th:text="#{crudCommons.all}">Todos</button>
+                        <button type="button" class="filter-btn" onclick="filtrarCategoria('bebida', event)" th:text="'🥤 ' + #{pedido.form.cat_drinks}">🥤 Bebidas</button>
+                        <button type="button" class="filter-btn" onclick="filtrarCategoria('plato', event)" th:text="'🥘 ' + #{pedido.form.cat_dishes}">🥘 Platos</button>
+                        <button type="button" class="filter-btn" onclick="filtrarCategoria('postre', event)" th:text="'🍰 ' + #{pedido.form.cat_desserts}">🍰 Postres</button>
+                        <button type="button" class="filter-btn" onclick="filtrarCategoria('menu', event)" th:text="'🍱 ' + #{pedido.form.cat_menus}">🍱 Menús</button>
+                    </div>
+
+                    <div id="contenedor-productos">
+                        <h3 class="section-header" th:text="'🍴 ' + #{pedido.form.section_items}">🍴 Productos Individuales</h3>
+                        <div class="grid-platos">
+                            <th:block th:each="p : ${cartaPlatos}">
+                                <button type="button" 
+                                        th:if="${p.isDisponiblePorFecha() && p.isDisponiblePorStock()}"
+                                        class="plato-btn" 
+                                        th:data-categoria="${p.categoria.toString().toLowerCase()}" 
+                                        th:onclick="agregarAlPedido([[${p.id}]], [[${p.nombre}]], 'plato')">
+                                    <span style="font-weight: 600; text-align: left;" th:text="${p.nombre}"></span>
+                                    <span class="price-tag" th:text="${p.precio} + '€'"></span>
+                                </button>
+                            </th:block>
+                        </div>
+
+                        <h3 class="section-header" style="margin-top: 25px;" th:text="'🍱 ' + #{pedido.form.section_menus}">🍱 Menús Completos</h3>
+                        <div class="grid-platos">
+                            <th:block th:each="m : ${cartaMenus}">
+                                <button type="button" 
+                                        th:if="${m.isDisponibleCompleto()}"
+                                        class="plato-btn menu-btn" 
+                                        data-categoria="menu"
+                                        th:onclick="agregarAlPedido([[${m.id}]], [[${m.nombre}]], 'menu')">
+                                    <span th:text="${m.nombre}"></span>
+                                    <span class="price-tag" th:text="${m.precio} + '€'"></span>
+                                </button>
+                            </th:block>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="resumen-comanda">
+                    <h3 class="section-header" th:text="#{pedido.form.ticket_title}">Ticket de Comanda</h3>
+                    <form th:action="@{/pedidos/guardar}" th:object="${pedido}" method="post" id="form-comanda">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <input type="hidden" th:field="*{id}" />
+                        <input type="hidden" th:field="*{fechaEntrada}" />
+                        <input type="hidden" th:field="*{reserva.idReserva}" th:if="${pedido.reserva != null}" />
+
+                        <div id="mesa-selector-container" style="margin-bottom: 15px; border-radius: 12px; padding: 5px;">
+                            <label class="input-label" th:text="#{pedido.form.label_table}">Seleccionar Mesa</label>
+                            
+                            <select name="mesa.idMesa" class="input-field" required>
+                                <option value="" disabled 
+                                        th:selected="${pedido == null || pedido.mesa == null || pedido.mesa.idMesa == null}" 
+                                        th:text="#{pedido.form.placeholder_table}">Selecciona una mesa...</option>
+                                
+                                <th:block th:each="m : ${listaMesas}">
+                                    <option th:value="${m.idMesa}" 
+                                            th:text="${m.numMesa + ' - ' + m.ubicacion}"
+                                            th:selected="${pedido != null && pedido.mesa != null && pedido.mesa.idMesa == m.idMesa}">
+                                    </option>
+                                </th:block>
+                            </select>
+                        </div>
+                                            
+                        <div style="margin-bottom: 15px;">
+                            <label class="input-label" th:text="#{pedido.form.label_notes}">Notas / Alergias</label>
+                            <input type="text" th:field="*{observaciones}" class="input-field" th:placeholder="#{pedido.form.placeholder_notes}" />
+                        </div>
+
+                        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+                        
+                        <div id="lista-seleccionados" th:data-size-platos="${pedido.detallesPlatos != null ? pedido.detallesPlatos.size() : 0}" th:data-size-menus="${pedido.detallesMenus != null ? pedido.detallesMenus.size() : 0}">
+                            <p id="mensaje-vacio" 
+                            th:if="${#lists.isEmpty(pedido.detallesPlatos) && #lists.isEmpty(pedido.detallesMenus)}" 
+                            style="color: #94a3b8; text-align: center; font-style: italic; padding: 20px;"
+                            th:text="#{pedido.form.empty_ticket}">
+                                El ticket está vacío
+                            </p>
+
+                            <div th:each="detalle, stat : ${pedido.detallesPlatos}" class="item-seleccionado" th:if="${!detalle.esMenu}">
+                                <div style="flex-grow: 1;">
+                                    <strong style="color: #064e3b; font-size: 0.9rem;" th:text="${detalle.plato.nombre}"></strong>
+                                    <input type="hidden" th:name="|detallesPlatos[${stat.index}].id|" th:value="${detalle.id}" />
+                                    <input type="hidden" th:name="|detallesPlatos[${stat.index}].plato.id|" th:value="${detalle.plato.id}" />
+                                    <input type="hidden" th:name="|detallesPlatos[${stat.index}].estado|" th:value="${detalle.estado}" />
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <input type="number" th:name="|detallesPlatos[${stat.index}].cantidad|" th:value="${detalle.cantidad}" min="1" class="input-field" 
+                                           style="width: 55px; padding: 5px; text-align: center; margin:0;" />
+                                    <button type="button" onclick="this.parentElement.parentElement.remove()" 
+                                            style="background: #fee2e2; color: #ef4444; border: none; border-radius: 8px; padding: 5px 10px; cursor: pointer;">
+                                            ×
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div th:each="detalle, stat : ${pedido.detallesMenus}" class="item-seleccionado">
+                                <div style="flex-grow: 1;">
+                                    <strong style="color: #064e3b; font-size: 0.9rem;" th:text="'🍱 ' + ${detalle.menu.nombre}"></strong>
+                                    <input type="hidden" th:name="|detallesMenus[${stat.index}].menu.id|" th:value="${detalle.menu.id}" />
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <input type="number" th:name="|detallesMenus[${stat.index}].cantidad|" th:value="${detalle.cantidad}" min="1" class="input-field" 
+                                           style="width: 55px; padding: 5px; text-align: center; margin:0;" />
+                                    <button type="button" onclick="this.parentElement.parentElement.remove()" 
+                                            style="background: #fee2e2; color: #ef4444; border: none; border-radius: 8px; padding: 5px 10px; cursor: pointer;">
+                                            ×
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="btn-container" style="display: flex; flex-direction: column; margin-top: 30px; gap: 10px;">
+                            <button type="submit" class="btn-action btn-primary" style="width: 100%; padding: 15px;" th:text="'👨‍🍳 ' + #{pedido.form.btn_send}">
+                                👨‍🍳 ENVIAR A COCINA
+                            </button>
+                            
+                            <a th:href="@{/pedidos/listado}" class="btn-action" style="background: #f1f5f9; color: #475569; text-decoration: none; text-align: center;" th:text="#{pedido.form.btn_back}">
+                                VOLVER AL LISTADO
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/js/pedidoForm.js"></script>
+</body>
+</html>

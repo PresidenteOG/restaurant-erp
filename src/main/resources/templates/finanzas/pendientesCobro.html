@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{finanzas.cobro.title_page}">Finanzas - Restaurantus</title>
+    <link rel="icon" href="/images/favicon.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/user_and_roles_lists.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body>
+    <div th:replace="~{/page_dashboard/dashboard :: sidebar(activePage='invoices')}"></div>
+
+    <div class="admin-container">
+        <main class="main-content with-dashboard">
+            <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0; margin-bottom: 25px;">
+                <div>
+                    <h1 style="margin: 0; font-size: 1.8rem; color: #1e293b;" th:text="#{finanzas.pendientes.title}">Comandas Pendientes de Cobro</h1>
+                    <p style="margin: 5px 0 0; color: #64748b;" th:text="#{finanzas.pendientes.subtitle}">Gestión de mesas en proceso de pago.</p>
+                </div>
+
+                <div style="display: flex; gap: 10px; min-width: 450px; justify-content: flex-end; align-items: center;">
+                    <a th:if="${hayCajaAbierta}" th:href="@{/finanzas/arqueo}" class="btn-action" 
+                    style="flex: 1; max-width: 150px; background-color: #3b82f6; padding: 10px; font-size: 0.85rem; text-decoration: none; color: white; border-radius: 8px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); white-space: nowrap;"
+                    th:text="#{finanzas.arqueo.title}">Arqueo de Caja</a>
+                    
+                    <a th:unless="${hayCajaAbierta}" th:href="@{/finanzas/abrirCaja}" class="btn-action" 
+                    style="flex: 1; max-width: 150px; background-color: #10b981; padding: 10px; font-size: 0.85rem; text-decoration: none; color: white; border-radius: 8px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); white-space: nowrap;"
+                    th:text="#{finanzas.pendientes.abrir_caja}">Abrir Caja</a>
+
+                    <a th:href="@{/finanzas/listadoCierres}" class="btn-action" 
+                    style="flex: 1; max-width: 200px; background-color: #8b5cf6; padding: 10px; font-size: 0.85rem; text-decoration: none; color: white; border-radius: 8px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); white-space: nowrap;"
+                    th:text="#{finanzas.pendientes.ver_cierres}">Ver Cierres</a>
+                </div>
+            </div>
+            <div>
+                <section class="card" style="border-radius: 20px; border: none; background: white; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 30px; border-left: 5px solid #10b981;">
+                    <div class="seccion-titulo" style="border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 15px;">
+                        <div style="width: 12px; height: 12px; background: #059669; border-radius: 50%;"></div>
+                        <h2 th:text="#{finanzas.pendientes.mesa}">Mesas Pendientes de Cobro</h2>
+                        <span class="indicador-cantidad" style="background: #10b981;" 
+                            th:text="${hayCajaAbierta ? enPago.size() : 0}">0</span>
+                    </div>
+
+                    <div th:if="${hayCajaAbierta}">
+                        <table id="tablaCobros" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th th:text="#{finanzas.pendientes.th_mesa}">Mesa</th>
+                                    <th th:text="#{crudCommons.status}">Estado Actual</th>
+                                    <th class="text-center no-sort" th:text="#{pedido.finalizados.th_invoice}">Factura</th>
+                                    <th class="text-center no-sort" th:text="#{crudCommons.actions}">Acciones</th>
+                                </tr>
+                                <tr class="filter-row">
+                                    <th><input type="text" th:placeholder="#{finanzas.pendientes.th_mesa} + '...'"></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="p : ${enPago}">
+                                    <td style="font-weight: bold; font-size: 1.1em;" th:text="${p.mesa.numMesa}"></td>
+                                    <td>
+                                        <span class="status-pill" style="background: #a7e0b4; color: #059669;">PENDIENTE DE COBRO</span>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/finanzas/descargarFactura/{id}(id=${p.id})}" class="btn-action" style="background-color: #f59e0b; padding: 6px 12px; font-size: 0.9em; text-decoration: none; color: white; border-radius: 6px;"
+                                        th:text="'📄 ' + #{pedido.finalizados.th_invoice}">📄 Factura</a>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/finanzas/pasarelaCobro/{id}(id=${p.id})}" 
+                                        style="background: #1e293b; color: white; padding: 8px 16px; font-size: 0.75rem; border-radius: 12px; font-weight: 800; text-decoration: none; text-transform: uppercase;"
+                                        th:text="'💰 ' + #{finanzas.pendientes.btn_cobrar}">💰 COBRAR</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div th:unless="${hayCajaAbierta}" 
+                        style="text-align: center; padding: 40px 20px; background: #fff7ed; border-radius: 15px; border: 1px dashed #fb923c;">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">🔒</div>
+                        <h3 style="color: #9a3412; margin-bottom: 10px;" th:text="#{finanzas.pendientes.bloqueado_title}">Función de Cobro Bloqueada</h3>
+                        <p style="color: #c2410c; max-width: 400px; margin: 0 auto 20px;" th:text="#{finanzas.pendientes.bloqueado_msg}">
+                            Debe <strong>Abrir Caja</strong> antes de poder procesar pagos o ver los pedidos pendientes de cobro.
+                        </p>
+                        <a th:href="@{/finanzas/abrirCaja}" 
+                        style="background: #10b981; color: white; padding: 10px 25px; border-radius: 10px; text-decoration: none; font-weight: bold; display: inline-block;"
+                        th:text="#{finanzas.pendientes.btn_abrir}">Ir a Apertura de Caja</a>
+                    </div>
+
+                </section>
+            <a th:href="@{/pedidos/finalizados}" style="margin-top: 20px; display: inline-block; background: #10b981; color: white; padding: 10px 20px; border-radius: 12px; text-decoration: none;">Ver Pedidos Finalizados</a>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+        window.datatableTranslations = {
+            search: "",
+            searchPlaceholder: /*[[#{crudCommons.search}]]*/ "Buscar",
+            lengthMenu: /*[[#{crudCommons.lengthMenu}]]*/ "Mostrar _MENU_ registros",
+            infoFiltered: "",
+            info: /*[[#{crudCommons.info}]]*/ "Mostrando _START_ a _END_ de <b>_TOTAL_</b> registros",
+            infoEmpty: /*[[#{crudCommons.infoEmpty}]]*/ "Mostrando 0 a 0 de 0 registros",
+            paginate: {
+                next: /*[[#{crudCommons.next}]]*/ "Siguiente",
+                previous: /*[[#{crudCommons.previous}]]*/ "Anterior",
+                first: /*[[#{crudCommons.first}]]*/ "Primero",
+                last: /*[[#{crudCommons.last}]]*/ "Último"
+            }
+        };
+    </script>
+</body>
+</html>

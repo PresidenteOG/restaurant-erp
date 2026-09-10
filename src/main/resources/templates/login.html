@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Restaurantus</title>
+    <link rel="icon" href="/images/favicon.png">
+    <link rel="stylesheet" href="/css/login.css">
+</head>
+<body>
+    <div class="login-body">
+        <div class="login-card">
+        <img class="logo-circle" src="/images/logo.png"/>
+        <h1>Restaurantus</h1>
+        <h2 th:text="#{login.bienvenido}">Welcome</h2>
+        <p class="subtitle" th:text="#{login.subtitulo}">Please enter your credentials to continue</p>
+
+        <div th:if="${param.error}" class="warning bad" th:text="#{login.error}">
+            Usuario o contraseña incorrectos.
+        </div>
+
+        <div th:if="${message}" class="warning good" th:text="${message}">
+            Menaje aquí.
+        </div>
+
+        <form th:action="@{/login}" method="post">
+            <div class="form-group">
+                <label for="username" th:text="#{login.usuario}">Username</label>
+                <input type="text" id="username" name="username" th:placeholder="#{login.enter_username}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" th:placeholder="#{login.enter_password}" required>
+                <div style="text-align: right; margin-top: 8px;">
+                    <a th:href="@{/forgot-password}" class="forgot-link" th:text="#{login.forgot_password}">Forgot password?</a>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-login" th:text="#{login.login}">Login</button>
+        </form>
+
+        <p class="copyright" style="margin-top: 2rem;" th:text="#{common.copyright}">© 2026 Restaurantus ERP — All rights reserved</p>
+    </div>
+    </div>
+</body>
+</html>

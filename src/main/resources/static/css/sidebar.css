@@ -1,0 +1,122 @@
+ * {
+     box-sizing: border-box;
+     
+     /* Fundamental para que el padding no sume ancho */
+ }
+
+ .sidebar {
+     width: 260px;
+     /* Ancho fijo único */
+     min-width: 260px;
+     max-width: 260px;
+     height: 100vh;
+     background: #ffffff;
+     padding: 15px 15px;
+     border-right: 1px solid #eee;
+     position: fixed;
+     top: 0;
+     left: 0;
+     display: flex;
+     flex-direction: column;
+     /* Evita scrolls raros si el texto es largo */
+ }
+
+ /* Menu */
+ .menu {
+     padding-left: 4px;
+     align-items: center;
+     list-style: none;
+     overflow-y: auto;
+     /* El menú tendrá scroll solo si hay demasiados items */
+
+     flex-grow: 1;
+ }
+
+ .menu li {
+
+     margin-bottom: 2px;
+     margin-left: 0px;
+ }
+
+ .menu a {
+     display: flex;
+     align-items: center;
+     gap: 10px;
+     padding: 10px 14px;
+     text-decoration: none;
+     color: #666;
+     border-radius: 12px;
+     font-size: 15px;
+ }
+
+ .menu a:hover {
+     background: #eaf7e6;
+     color: #4caf50;
+ }
+
+ /* Active item */
+ .menu li.active a {
+     background: #eaf7e6;
+     color: #4caf50;
+     font-weight: 600;
+ }
+
+ .icon {
+     font-size: 16px;
+ }
+
+
+ .logo-img {
+     width: 75px;
+     /* Adjusted from 10px to be visible */
+     height: auto;
+     /* Let height scale naturally to prevent squishing */
+     object-fit: contain;
+     border-radius: 6px;
+     /* Optional: rounds the corners of the blue box */
+ }
+
+ /* Logo */
+ .logo {
+     display: flex;
+     align-items: center;
+     gap: 12px;
+     font-weight: bold;
+     font-size: 20px;
+     color: #6bbf59;
+     margin-bottom: 30px;
+ }
+
+ .logout-section {
+     margin-top: auto;
+     display: flex;
+     justify-content: center;
+     /* Centrado horizontal */
+     width: 100%;
+     /* Ocupa todo el ancho de la sidebar */
+     padding-top: 20px;
+     padding-bottom: 10px;
+     /* Espacio extra al final */
+ }
+
+ .btn-logout {
+     background-color: #fee2e2;
+     color: #ef4444;
+     border: none;
+     padding: 8px 15px;
+     /* Tamaño pequeño */
+     border-radius: 8px;
+     font-size: 13px;
+     font-weight: 600;
+     cursor: pointer;
+     display: flex;
+     align-items: center;
+     gap: 8px;
+     /* Espacio entre icono y texto */
+     transition: all 0.2s;
+ }
+
+ .btn-logout:hover {
+     background-color: #ef4444;
+     color: white;
+ }
