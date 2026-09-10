@@ -65,6 +65,15 @@ The full app expects MySQL + MongoDB + a Telegram bot. To run it as a lightweigh
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for the layering, the multi-DB wiring and the chat path.
 
+## Contributors
+
+A group project for the DAM course. Handles are GitLab, where the coursework was hosted.
+
+- **Ismael Rosillo** (@rosillodev) — lead
+- **Daniel Adanegbe** (@dadanegbe)
+- **Zakaria Elmtiouy** (@elmitouy.zakaria)
+- **Jack** (@jacka)
+
 ## License
 
 PolyForm Noncommercial 1.0.0 ([LICENSE](./LICENSE)). Personal, non-commercial use only.
