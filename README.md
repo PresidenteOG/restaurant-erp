@@ -10,6 +10,10 @@ reservations, the order-to-kitchen flow, cash reconciliation with PDF invoices, 
 and an internal chat that also bridges to Telegram. Server-rendered with Thymeleaf, one Spring
 Boot app.
 
+**Live demo:** _deploy pending_ — sign in as `admin` / `demo1234`. Runs on a free tier
+with in-memory data (H2), so it sleeps when idle and the first request after that takes
+~30–50 s. See [docs/DEPLOY.md](./docs/DEPLOY.md) for what the demo profile leaves out.
+
 Built for a DAM (software development) course module — a team project covering Spring Security,
 multi-database access, WebSockets and a third-party bot integration.
 
@@ -53,13 +57,19 @@ Then open `http://localhost:8080`. Hibernate creates the schema (`ddl-auto` defa
 Telegram link-account gate (`TelegramCheckInterceptor`) redirects staff to `/telegram/vincular`
 until they connect a Telegram account — see the notes below to loosen that for a demo.
 
-## Notes for a public demo
+## The demo profile
 
-The full app expects MySQL + MongoDB + a Telegram bot. To run it as a lightweight demo:
+`-Dspring-boot.run.profiles=demo` (or `SPRING_PROFILES_ACTIVE=demo`) runs the whole app
+with no external services: in-memory H2 instead of MySQL, the UI strings from a bundled
+English file instead of MongoDB, the Telegram bot off, and a seeded sample restaurant.
+This is what the live demo and the Docker image use. Details and logins:
+[docs/DEPLOY.md](./docs/DEPLOY.md).
 
-- swap MySQL for the bundled H2 (the `h2` dependency is already on the classpath),
-- point `MONGODB_URI` at a free MongoDB Atlas tier, or stub `MongoMessageSource`,
-- disable `TelegramCheckInterceptor` so the Telegram gate doesn't block every page.
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.profiles=demo
+# or
+docker build -t restaurant-erp . && docker run --rm -p 8080:8080 restaurant-erp
+```
 
 ## Architecture
 

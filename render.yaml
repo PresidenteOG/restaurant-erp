@@ -1,0 +1,16 @@
+# Render blueprint — https://render.com/docs/blueprint-spec
+# One free web service built from the Dockerfile. No database add-on: the demo
+# profile runs on in-memory H2 and re-seeds itself on every start, MongoDB is
+# skipped (i18n falls back to the bundled English strings) and the Telegram bot
+# is turned off. See docs/DEPLOY.md.
+services:
+  - type: web
+    name: restaurant-erp
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /login
+    autoDeploy: true
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: demo

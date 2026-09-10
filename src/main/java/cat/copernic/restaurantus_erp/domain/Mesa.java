@@ -21,7 +21,10 @@ public class Mesa {
     @Column(name = "num_mesa", nullable = false)
     private String numMesa; // Cambiado a camelCase
 
-    @Column(name = "capacidad", nullable = false, columnDefinition = "CHECK (capacidad > 0 AND capacidad <= 20)")
+    // El rango valido (1..20) se valida en la capa de servicio; el
+    // columnDefinition "CHECK(...)" anterior no era un tipo de columna valido
+    // y rompia la generacion de esquema (create-drop) en H2.
+    @Column(name = "capacidad", nullable = false)
     private Integer capacidad;
 
     @Column(name = "ubicacion")

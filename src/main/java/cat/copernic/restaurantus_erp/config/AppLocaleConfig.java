@@ -3,6 +3,8 @@ package cat.copernic.restaurantus_erp.config;
 import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -28,8 +30,12 @@ public class AppLocaleConfig implements WebMvcConfigurer {
     @Lazy
     private TelegramCheckInterceptor telegramCheckInterceptor;
 
+    // Perfil demo: telegram.enabled=false apaga el bot y el interceptor de vinculación.
+    @Value("${telegram.enabled:true}")
+    private boolean telegramEnabled;
+
     // --- NUEVO: Variable para guardar la sesión del bot ---
-    private BotSession botSession; 
+    private BotSession botSession;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -37,6 +43,7 @@ public class AppLocaleConfig implements WebMvcConfigurer {
     }
 
     @Bean
+    @ConditionalOnProperty(name = "telegram.enabled", havingValue = "true", matchIfMissing = true)
     public TelegramBotsApi telegramBotsApi(RestaurantusPolling restaurantusBot) throws TelegramApiException {
         TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
         try {
@@ -78,7 +85,9 @@ public class AppLocaleConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(localeChangeInterceptor());
-        registry.addInterceptor(telegramCheckInterceptor).addPathPatterns("/**");
+        if (telegramEnabled) {
+            registry.addInterceptor(telegramCheckInterceptor).addPathPatterns("/**");
+        }
     }
 
     @Override

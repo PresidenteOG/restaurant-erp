@@ -27,8 +27,18 @@ public class LangServiceImpl implements LangService {
         //haber "cada key individual con su version en todos los idiomas"
         //a ser "cada idioma tiene su mapa de key y valor (un solo idioma)"
         //unicamente en el map de cache
-        /*long count = this.idiomesDAO.count();
-        System.out.println("Documentos encontrados en Mongo: " + count);*/
+        //
+        //Si Mongo no está disponible (p. ej. perfil demo) dejamos la cache
+        //vacía y MongoMessageSource resuelve todo desde el bundle de fallback.
+        try {
+            cargarDesdeMongo();
+        } catch (RuntimeException ex) {
+            System.err.println("⚠️ Traducciones: MongoDB no disponible (" + ex.getClass().getSimpleName()
+                    + "). Se usará el bundle de fallback.");
+        }
+    }
+
+    private void cargarDesdeMongo() {
         this.idiomesDAO.findAll().forEach(tKey -> {
             //System.out.println("Cargando clave: " + tKey.getKey());
             tKey.getTranslations().forEach((lang, value) -> {
