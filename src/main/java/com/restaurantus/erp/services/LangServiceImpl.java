@@ -1,0 +1,62 @@
+package com.restaurantus.erp.services;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.restaurantus.erp.dao.mongo.LanguagesDAO;
+import com.restaurantus.erp.dao.mongo.TranslationDAO;
+import jakarta.annotation.PostConstruct;
+
+@Service
+public class LangServiceImpl implements LangService {
+    @Autowired
+    private TranslationDAO idiomesDAO;
+    @Autowired
+    private LanguagesDAO newIdiomesDAO;
+    // Cache local: Map<Idioma, Map<Clave, Valor>>
+    private final Map<String, Map<String, String>> cache = new ConcurrentHashMap<>();
+
+    @PostConstruct
+    public void loadTranslations() {
+        //Este codigo lo que hace es basicamente añadir cada translation key que
+        //se haya encontrado a un idioma, pasando de
+        //haber "cada key individual con su version en todos los idiomas"
+        //a ser "cada idioma tiene su mapa de key y valor (un solo idioma)"
+        //unicamente en el map de cache
+        //
+        //Si Mongo no está disponible (p. ej. perfil demo) dejamos la cache
+        //vacía y MongoMessageSource resuelve todo desde el bundle de fallback.
+        try {
+            cargarDesdeMongo();
+        } catch (RuntimeException ex) {
+            System.err.println("⚠️ Traducciones: MongoDB no disponible (" + ex.getClass().getSimpleName()
+                    + "). Se usará el bundle de fallback.");
+        }
+    }
+
+    private void cargarDesdeMongo() {
+        this.idiomesDAO.findAll().forEach(tKey -> {
+            //System.out.println("Cargando clave: " + tKey.getKey());
+            tKey.getTranslations().forEach((lang, value) -> {
+                this.cache.computeIfAbsent(lang, k -> new ConcurrentHashMap<>())
+                     .put(tKey.getKey(), value);
+            });
+        });
+        this.newIdiomesDAO.findAll().forEach(lang -> {
+            Map<String, String> map = this.cache.computeIfAbsent(lang.getLanguageCode(), k -> new ConcurrentHashMap<>());
+            lang.getTranslations().forEach((tKey, value) -> {
+                map.put(tKey, value);
+            });
+        });
+    }
+
+    public String getTranslation(String key, String idioma) {
+        //si no encuentra el idioma, devuelve un empty collection,
+        //y si no existe la clave devuelce la propia clave
+        return this.cache.getOrDefault(idioma, Collections.emptyMap()).getOrDefault(key, key);
+    }
+}

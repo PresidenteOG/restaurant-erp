@@ -65,7 +65,7 @@
 
         <div style="margin-top: 30px">
           <th:block
-            th:each="subCat : ${T(cat.copernic.restaurantus_erp.domain.SubcategoriaPlato).values()}"
+            th:each="subCat : ${T(com.restaurantus.erp.domain.SubcategoriaPlato).values()}"
           >
             <th:block th:if="${subCat.categoriaPadre.name() != 'BEBIDA'}">
               <div class="partida-seccion">

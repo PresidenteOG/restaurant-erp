@@ -53,7 +53,7 @@
             </div>
 
             <div id="section-platos" class="carta-section">
-                <div th:each="subCat : ${T(cat.copernic.restaurantus_erp.domain.SubcategoriaPlato).values()}" 
+                <div th:each="subCat : ${T(com.restaurantus.erp.domain.SubcategoriaPlato).values()}" 
                     th:if="${subCat.categoriaPadre.name == 'PLATO'}">
                     
                     <h3 th:text="${subCat.nombreVisible}" style="margin: 20px 0; color: #10b981; border-left: 4px solid #2ecc71; padding-left: 6px;"></h3>
@@ -129,7 +129,7 @@
             </div>
 
             <div id="section-bebidas" class="carta-section" style="display:none;">
-                <div th:each="subCat : ${T(cat.copernic.restaurantus_erp.domain.SubcategoriaPlato).values()}" 
+                <div th:each="subCat : ${T(com.restaurantus.erp.domain.SubcategoriaPlato).values()}" 
                     th:if="${subCat.categoriaPadre.name == 'BEBIDA'}">
                     
                     <h3 th:text="${subCat.nombreVisible}" style="margin: 20px 0; color: #10b981;"></h3>
@@ -183,7 +183,7 @@
             </div>
 
             <div id="section-postres" class="carta-section" style="display:none;">
-                <div th:each="subCat : ${T(cat.copernic.restaurantus_erp.domain.SubcategoriaPlato).values()}" 
+                <div th:each="subCat : ${T(com.restaurantus.erp.domain.SubcategoriaPlato).values()}" 
                     th:if="${subCat.categoriaPadre.name == 'POSTRE'}">
                     
                     <h3 th:text="${subCat.nombreVisible}" style="margin: 20px 0; color: #10b981;"></h3>

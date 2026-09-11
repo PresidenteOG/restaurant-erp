@@ -49,7 +49,7 @@
                     <label class="detail-label" th:text="#{carta.plato.label_cat}">Categoría</label>
                     <select th:field="*{categoria}" id="selectorCategoria" class="detail-value" style="width:100%; border:1px solid #334155; padding:5px; border-radius: 8px;" required>
                         <option value="" disabled selected th:text="#{carta.plato.select_cat}">Seleccione una categoría</option>
-                        <option th:each="cat : ${T(cat.copernic.restaurantus_erp.domain.CategoriaPlato).values()}" 
+                        <option th:each="cat : ${T(com.restaurantus.erp.domain.CategoriaPlato).values()}" 
                                 th:value="${cat}" 
                                 th:text="${cat}">
                         </option>
@@ -60,7 +60,7 @@
                     <label class="detail-label" th:text="#{carta.plato.label_subcat}">Subcategoría</label>
                     <select th:field="*{subcategoria}" id="selectorSubcategoria" class="detail-value" style="width:100%; border:1px solid #334155; background: transparent; padding:5px; border-radius: 8px;" required>
                         <option value="" disabled selected th:text="#{carta.plato.select_subcat}">Seleccione una subcategoría</option>
-                        <option th:each="sub : ${T(cat.copernic.restaurantus_erp.domain.SubcategoriaPlato).values()}" 
+                        <option th:each="sub : ${T(com.restaurantus.erp.domain.SubcategoriaPlato).values()}" 
                                 th:value="${sub}" 
                                 th:text="${sub.nombreVisible}"
                                 th:data-parent="${sub.categoriaPadre}">

@@ -9,7 +9,7 @@
         <version>3.5.8</version>
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
-    <groupId>cat.copernic</groupId>
+    <groupId>com.restaurantus</groupId>
     <artifactId>restaurantus-erp</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>restaurantus-erp</name>
