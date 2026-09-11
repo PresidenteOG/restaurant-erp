@@ -71,6 +71,14 @@ This is what the live demo and the Docker image use. Details and logins:
 docker build -t restaurant-erp . && docker run --rm -p 8080:8080 restaurant-erp
 ```
 
+## Screenshots
+
+From a local run on the `demo` profile (`admin` / `demo1234`).
+
+![Dashboard, demo data](./docs/screenshots/dashboard.png)
+:---:
+Dashboard — today's bookings, active orders, occupied tables, sales
+
 ## Architecture
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for the layering, the multi-DB wiring and the chat path.
