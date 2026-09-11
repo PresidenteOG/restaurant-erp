@@ -1,9 +1,12 @@
+![restaurant-erp](./docs/banner.png)
+
 # Restaurantus ERP
 
 ![Java](https://img.shields.io/badge/Java-25-007396?style=flat&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3-6DB33F?style=flat&logo=springboot&logoColor=white)
 ![Thymeleaf](https://img.shields.io/badge/Thymeleaf-005F0F?style=flat&logo=thymeleaf&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=flat&logo=mysql&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat&logo=mongodb&logoColor=white)
 
 A back-office ERP for running a restaurant: the menu and its ingredients, table layout,
 reservations, the order-to-kitchen flow, cash reconciliation with PDF invoices, staff incidents,

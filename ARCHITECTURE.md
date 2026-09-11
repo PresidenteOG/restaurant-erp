@@ -17,6 +17,8 @@ flowchart TB
     browser -. SockJS .-> ws
 ```
 
+![restaurant-erp architecture: the browser goes through Thymeleaf views and Spring Security, controllers delegate to services, services read and write through MySQL via Spring Data JPA and MongoDB for translations, with Telegram and WebSocket chat on the side](./docs/architecture.png)
+
 ## Packages
 
 | Package | Role |
