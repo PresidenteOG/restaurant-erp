@@ -1,0 +1,29 @@
+name: CI
+
+# Builds the app on every push and PR. Runs the demo-profile smoke test,
+# which needs no database or external service.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: temurin
+          cache: maven
+
+      - name: Build and test
+        run: ./mvnw -B verify
