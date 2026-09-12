@@ -84,6 +84,8 @@ Dashboard — today's bookings, active orders, occupied tables, sales
 
 ## Architecture
 
+![restaurant-erp architecture: layering, multi-DB wiring and the chat path](docs/architecture.png)
+
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for the layering, the multi-DB wiring and the chat path.
 
 ## Contributors
