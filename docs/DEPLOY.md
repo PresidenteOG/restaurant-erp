@@ -32,8 +32,9 @@ sample data with the JPA entity setters, so it works on any SQL dialect.
 3. Deploy. First build takes a few minutes (Maven downloads dependencies).
 4. Paste the live URL into the root `README.md` and the profile README row.
 
-The free tier sleeps after ~15 minutes idle; the first request after that takes
-30–50 seconds while the container wakes and re-seeds.
+The free tier sleeps after ~15 minutes idle; the first request after that can take
+up to 3 minutes while the container wakes and re-seeds (on the free CPU the app alone needs
+about 170 s to start).
 
 ## Run it locally without Docker
 
